@@ -47,9 +47,10 @@ class MazeUIApp:
 
 
     def Run(self):
+        print("running the 'Run' command")
         # Move the robots into starting position
-        pass
-        
+        self.board.Update()
+        self.DrawBoard()
         
                
 root = tk.Tk()

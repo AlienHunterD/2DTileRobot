@@ -8,7 +8,7 @@ import numpy as np
 import tkinter
 import random
 from time import clock
-from Robot import *
+#from Robot import *
 
 class Board:
     
@@ -59,13 +59,13 @@ class Board:
         x = offset + u*deltaX 
         y = offset + (self.height-v-1)*deltaY # Flip the y
         canvas.create_oval((x+2, y+2, x+deltaX-2, y+deltaY-2),fill="red")
-        canvas.create_text((x+deltaX/2, y+deltaY/2), anchor='center', text="1")
+        canvas.create_text((x+deltaX/2, y+deltaY/2), anchor='center', text=str(self.robot1[2]))
         
         u, v = self.robot2[:2]
         x = offset + u*deltaX 
         y = offset + (self.height-v-1)*deltaY # Flip the y
         canvas.create_oval((x+2, y+2, x+deltaX-2, y+deltaY-2),fill="blue")
-        canvas.create_text((x+deltaX/2, y+deltaY/2), anchor='center', text="2")
+        canvas.create_text((x+deltaX/2, y+deltaY/2), anchor='center', text=str(self.robot2[2]))
 
         canvas.create_text((20,18), anchor='sw', text="{}x{}".format(self.width,self.height))
         
@@ -77,10 +77,65 @@ class Board:
         self.tiles[(4,6)] = 1
         self.tiles[(4,5)] = 1
         self.tiles[(5,5)] = 1
-    
+
     
     def Update(self):
-        self.robot1.Update()
+        #self.robot1.Update()
+        loc =  (self.robot1[0],self.robot1[1])
+        loc_south = (self.robot1[0],self.robot1[1]-1)
+        loc_east = (self.robot1[0]+1,self.robot1[1])
+        loc_west = (self.robot1[0]-1,self.robot1[1])
+        
+        if self.robot1[2] == 1: #this robot must search for bottom
+            #look south
+            print('moving south!')
+            if self.tiles[loc_south] == 1: #is a tile
+                #move robot down one, state is still searching down
+                self.robot1 = loc_south + (1,)
+                self.robot2 = (self.robot2[0],self.robot2[1]-1,self.robot2[2])
+            elif  self.tiles[loc_south] == 0: 
+                #move robot down one, state is not searching down
+                self.robot1 = loc_south + (2,)
+                self.robot2 = (self.robot2[0],self.robot2[1]-1,self.robot2[2])
+        elif self.robot1[2] == 2: #this robot must search for bottom by going right or left 
+            if self.tiles[loc_east] == 1: #is a tile
+                #move right, go back to searching down
+                self.robot1 = loc_east + (1,)
+                self.robot2 = (self.robot2[0]+1,self.robot2[1],self.robot2[2])
+            elif self.tiles[loc_west] == 1: #is a tile
+                #move west, go back to searching down
+                self.robot1 = loc_west + (1,)
+                self.robot2 = (self.robot2[0]-1,self.robot2[1],self.robot2[2])
+            elif self.tiles[loc_south] == 1: #is a tile
+                self.robot1 = loc_south + (1,)
+                self.robot2 = (self.robot2[0],self.robot2[1]-1,-2)
+            else:
+                self.robot1 = loc_south + (3,)
+                self.robot2 = (self.robot2[0],self.robot2[1]-1,-2)
+        elif self.robot1[2] == 3: #IS IT OK TO START BOUNDING BOX?
+            if self.tiles[loc_east] == 1: #is a tile
+                #move right, go back to searching down
+                self.robot1 = loc_east + (1,)
+                self.robot2 = (self.robot2[0]+1,self.robot2[1],self.robot2[2])
+            elif self.tiles[loc_west] == 1: #is a tile
+                #move west, go back to searching down
+                self.robot1 = loc_west + (1,)
+                self.robot2 = (self.robot2[0]-1,self.robot2[1],self.robot2[2])
+            elif self.tiles[loc_south] == 1: #is a tile
+                self.robot1 = loc_south + (1,)
+                self.robot2 = (self.robot2[0],self.robot2[1]-1,-2)
+            else:
+                self.robot1 = loc + (4,)
+
+        elif self.robot1[2] == 4: #Place a tile where robot1 is
+                self.robot1 = loc_west + (4,)
+                self.tiles[loc] = 1
+                # if no tile is to the right
+                
+                    
+                
+    
+    
     
     @staticmethod
     def _Hexify(num):
