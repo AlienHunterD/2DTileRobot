@@ -14,8 +14,10 @@ class Board:
     
     def __init__(self, start1, start2, dims=(10,10)):
         """ Create an empy maze of dimension given by dims """
-        self.robot1 = tuple(start1+(1,))
-        self.robot2 = tuple(start2+(-1,))
+        #TODO: dictionary for left, right, forward, backward tile locations
+        # TODO: names for states
+        self.robot1 = tuple(start1+(1,2))   # 0 = N, 1 = E, 2 = S, 3 = W
+        self.robot2 = tuple(start2+(-1,2))
         self.size = dims        
         self.width, self.height = dims
         self.tiles = np.zeros(dims, dtype=int)
@@ -132,7 +134,16 @@ class Board:
                 self.tiles[loc] = 1
                 # if no tile is to the right
                 
-                    
+     '''   if STATE_BUILD:  
+            look to right, if open, place a tile at location, rotate right, move forward
+                            else  STATE_BACKUP
+         if STATE_BACKUP:
+            look behind, if tile, consume current tile and move backward one
+                         if no tile, rotate left, STATE_CHECK_FORWARD:
+         if STATE_CHECK_FORWARD:
+             if tile in front is empty, move forward, STATE_BUILD:
+                 else  STATE_BACKUP
+                 '''
                 
     
     
