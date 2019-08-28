@@ -5,15 +5,15 @@ Maze display UI
 @author: d
 """
 import tkinter as tk
-from Board import *
+import Board
 
 class MazeUIApp:
 
     def __init__(self, master):
-        self.board = Board((4,7), (4,8))
-        self.frameMain = tk.Frame(master, width=1024, height=768, bd=1)
+        self.board = Board.Board((7,8), (7,9))
+        self.frameMain = tk.Frame(master, width=1920, height=1080, bd=1)
         self.frameMain.pack(side=tk.LEFT)
-        self.canvasBoard = tk.Canvas(self.frameMain, width=900, height=700)
+        self.canvasBoard = tk.Canvas(self.frameMain, width=1200, height=900)
         self.canvasBoard.pack(side=tk.LEFT, fill=tk.BOTH)
         self.frame = tk.Frame(master, bd=2, relief=tk.RAISED)
         self.frame.pack(side=tk.RIGHT, fill=tk.BOTH)
@@ -42,12 +42,11 @@ class MazeUIApp:
     
     def DrawBoard(self):
         self.canvasBoard.delete(tk.ALL)
-        self.board.Draw(self.canvasBoard,(600,600))
+        self.board.Draw(self.canvasBoard,(800,800))
         self.canvasBoard.update()
 
 
     def Run(self):
-        print("running the 'Run' command")
         # Move the robots into starting position
         self.board.Update()
         self.DrawBoard()
