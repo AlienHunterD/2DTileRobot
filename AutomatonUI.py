@@ -7,7 +7,7 @@ Maze display UI
 import tkinter as tk
 import Board
 
-class MazeUIApp:
+class AutomatonUIApp:
 
     def __init__(self, master):
         self.board = Board.Board((7,8), (7,9))
@@ -21,6 +21,7 @@ class MazeUIApp:
         self.genButton = tk.Button(self.frame, text='Run', command=self.Run)        
         self.genButton.pack(side=tk.TOP)
         
+        
         #self.showPath = tk.IntVar()
         #self.pathBox = tk.Checkbutton(self.frame, text='Path', command=self.DrawPath, variable=self.showPath)
         #self.pathBox.pack(side=tk.TOP)
@@ -29,8 +30,9 @@ class MazeUIApp:
         #self.iterateButton = tk.Button(self.frame, text='Iterate', command=self.Iterate)        
         #self.iterateButton.pack(side=tk.BOTTOM)   
 
-        #self.slider = tk.Scale(self.frame, from_=25, to=75, orient=tk.HORIZONTAL)
-        #self.slider.pack(side=tk.BOTTOM)
+        self.slider = tk.Scale(self.frame, from_=0, to=200, orient=tk.VERTICAL, 
+                               resolution=1, length=400, sliderlength=20, command=self.SetCurrentStep)
+        self.slider.pack(side=tk.BOTTOM)
 
         #self.fillButton = tk.Button(self.frame, text='Fill', command=self.DrawFill)        
         #self.fillButton.pack(side=tk.TOP)        
@@ -51,10 +53,16 @@ class MazeUIApp:
         self.board.Update()
         self.DrawBoard()
         
-               
+    
+    def SetCurrentStep(self, value):
+        step = self.slider.get()
+        self.board.SetStep(step)
+        self.DrawBoard()
+    
+    
 root = tk.Tk()
 
-app = MazeUIApp(root)
+app = AutomatonUIApp(root)
 
 root.mainloop()
 root.destroy()

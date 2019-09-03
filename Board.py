@@ -37,7 +37,10 @@ class Board:
         self.size = dims        
         self.width, self.height = dims
         self.tiles = np.zeros(dims, dtype=int)
+        self.step = 0
+        self.log = []
         self.Generate()
+        self.SetStep(0)
 
     
     def _DrawGrid(self, canvas, size, offset):
@@ -109,6 +112,22 @@ class Board:
         self.tiles[(7,6)] = 1
         self.tiles[(8,6)] = 1
         
+        self.LogState("Initial Board State")
+        
+        for i in range(200): # Run out 100 steps in the sim
+            self.Update()
+        
+
+    def LogState(self, message):
+        tile_list = []
+        # Log in all the tiles
+        for v in range(self.height):
+            for u in range(self.width):
+                if self.tiles[u,v] == 1:
+                    tile_list.append((u,v))
+        
+        self.log.append((tile_list, tuple(self.robot1), tuple(self.robot2), message))
+        
 
     
     def Update(self):
@@ -121,6 +140,7 @@ class Board:
         
         if self.LookForRobot():
             print("Found a robot!")
+            self.LogState("Finished!")
             return
         
         if self.CheckState(self.robot1, STATE_SEARCHSOUTH): #this robot must search for bottom
@@ -152,7 +172,15 @@ class Board:
             else:
                 self.SetState(self.robot1, STATE_BACKTRACK)
         
-        print("{} -- {}".format(self.robot1, self.robot2))
+        self.LogState("")
+        
+    def SetStep(self, step):
+        self.step = step
+        if step < len(self.log):
+            self.tiles.fill(0)
+            tile_list, self.robot1, self.robot2, message = self.log[step]
+            for loc in tile_list:
+                self.tiles[loc] = 1
 
             
     def SetState(self, robot, state):
