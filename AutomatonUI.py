@@ -49,8 +49,8 @@ class AutomatonUIApp:
 
 
     def Run(self):
-        # Move the robots into starting position
-        self.board.Update()
+        # Disabled for now
+        #self.board.Update()
         self.DrawBoard()
         
     
