@@ -1,10 +1,12 @@
 # -*- coding: utf-8 -*-
 """
-Maze display UI
-
-@author: d
+UI to display the robot moves for a 2D bounding box task
+Dan Biediger
+2019
+University of Houston
 """
 import tkinter as tk
+from tkinter import ttk
 import Board
 
 class AutomatonUIApp:
@@ -18,9 +20,17 @@ class AutomatonUIApp:
         self.frame = tk.Frame(master, bd=2, relief=tk.RAISED)
         self.frame.pack(side=tk.RIGHT, fill=tk.BOTH)
         
-        self.genButton = tk.Button(self.frame, text='Run', command=self.Run)        
-        self.genButton.pack(side=tk.TOP)
-        
+        #self.genButton = tk.Button(self.frame, text='Run', command=self.Run)        
+        #self.genButton.pack(side=tk.TOP)
+        self.labelTop = tk.Label(self.frame, text = "1. Select a Polyomino configuration")
+        self.labelTop.pack(side=tk.TOP)
+                
+        self.tkvar = tk.StringVar(master)
+        self.choices = {"single", "simpeleZ", "smallL", "spiral!"}
+        self.tkvar.set("simpleZ")
+        self.popupMenu = tk.OptionMenu(self.frame, self.tkvar, *self.choices)
+        self.tkvar.trace('w', self.SetPolyomino)
+        self.popupMenu.pack(side=tk.TOP)
         
         #self.showPath = tk.IntVar()
         #self.pathBox = tk.Checkbutton(self.frame, text='Path', command=self.DrawPath, variable=self.showPath)
@@ -57,6 +67,12 @@ class AutomatonUIApp:
     def SetCurrentStep(self, value):
         step = self.slider.get()
         self.board.SetStep(step)
+        self.DrawBoard()
+    
+    
+    def SetPolyomino(self, *args):
+        print(self.tkvar.get())
+        self.board.SetPolyomino(self.tkvar.get())
         self.DrawBoard()
     
     

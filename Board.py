@@ -1,12 +1,14 @@
 # -*- coding: utf-8 -*-
 """
-Maze creation and solver demo
-
-@author: d
+The Board and related logic for finding a bounding box around a connected 
+2D polyomino as presented in the paper "Connected Assembly and Reconfiguration by Finite Automata" 
+Dan Biediger
+2019
+University of Houston
 """
 import numpy as np
 import tkinter
-import random
+import MoveLog
 from operator import add
 
 NORTH = 1
@@ -22,26 +24,28 @@ STATE_IDLE = 0
 STATE_SEARCHSOUTH = 1
 STATE_SEARCH_EAST_WEST = 2
 STATE_BUILDINGBB = 4
-STATE_BACKTRACK = 5
-STATE_CHECKFORWARD = 6
-STATE_FINISH = 7
+STATE_FORGEAHEAD = 5
+STATE_BACKTRACK = 6
+STATE_CHECKFORWARD = 7
+STATE_SHIFT = 8
+STATE_FINISH = 10
 STATE_MARK_START = -1
 
 class Board:
     def __init__(self, start1, start2, dims=(15,15)):
-        """ Create an empy maze of dimension given by dims """
+        """ Create a board of the dimension given """
         #TODO: dictionary for left, right, forward, backward tile locations
         # TODO: names for states
+        self.start1 = start1
+        self.start2 = start2
         self.robot1 = [list(start1), STATE_SEARCHSOUTH, SOUTH]   # Start at the location in state 1, facing South
         self.robot2 = [list(start2), STATE_IDLE, SOUTH] # Start at the location in state 0, facing South
         self.size = dims        
         self.width, self.height = dims
         self.tiles = np.zeros(dims, dtype=int)
-        self.step = 0
-        self.log = []
-        self.Generate()
-        self.SetStep(0)
-
+        self.log = MoveLog.MoveLog()
+        self.SetPolyomino()
+        self.SetStep(0) # Go back to the beginning
     
     def _DrawGrid(self, canvas, size, offset):
         deltaX = int(size[0]/self.width) #Change here for non square cells
@@ -106,29 +110,12 @@ class Board:
         
     def Generate(self):
         """ Generate the initial tile setup. """
-        self.tiles.fill(0)
-        self.tiles[(6,7)] = 1
-        self.tiles[(7,7)] = 1
-        self.tiles[(7,6)] = 1
-        self.tiles[(8,6)] = 1
-        
-        self.LogState("Initial Board State")
         
         for i in range(200): # Run out 100 steps in the sim
             self.Update()
         
-
-    def LogState(self, message):
-        tile_list = []
-        # Log in all the tiles
-        for v in range(self.height):
-            for u in range(self.width):
-                if self.tiles[u,v] == 1:
-                    tile_list.append((u,v))
+        self.SetStep(0) # Go back to the beginning
         
-        self.log.append((tile_list, tuple(self.robot1), tuple(self.robot2), message))
-        
-
     
     def Update(self):
         #self.robot1.Update()
@@ -140,7 +127,7 @@ class Board:
         
         if self.LookForRobot():
             print("Found a robot!")
-            self.LogState("Finished!")
+            self.log.LogState(self.tiles, self.robot1, self.robot2, "Finished!")
             return
         
         if self.CheckState(self.robot1, STATE_SEARCHSOUTH): #this robot must search for bottom
@@ -149,14 +136,21 @@ class Board:
         elif self.CheckState(self.robot1, STATE_SEARCH_EAST_WEST): #this robot must search for bottom by going right or left
             self.SearchEastWest()
  
-        elif self.CheckState(self.robot1, STATE_BUILDINGBB):
-            
+        elif self.CheckState(self.robot1, STATE_BUILDINGBB): # We are building the Bounding box
             if self.LookRight(self.robot1) and self.LookLeft(self.robot1) and self.LookAhead(self.robot1):
                 self.TurnRobotRight(self.robot1)
                 self.MoveRobotForward(self.robot1)
                 self.PlaceTile(loc) # Place a tile on the square that I left
+                self.SetState(self.robot1,STATE_FORGEAHEAD)
             else:
                 self.SetState(self.robot1, STATE_BACKTRACK)
+        elif self.CheckState(self.robot1, STATE_FORGEAHEAD):
+            if self.LookRight(self.robot1) and self.LookLeft(self.robot1) and self.LookAhead(self.robot1):
+                self.MoveRobotForward(self.robot1)
+                self.PlaceTile(loc) # Place a tile on the square that I left
+                self.SetState(self.robot1,STATE_BUILDINGBB)
+            else:
+                self.SetState(self.robot1, STATE_BACKTRACK) 
         elif self.CheckState(self.robot1, STATE_BACKTRACK):
             # look behind
             if self.LookBehind(self.robot1): # See if there is a tile behind me
@@ -172,20 +166,66 @@ class Board:
             else:
                 self.SetState(self.robot1, STATE_BACKTRACK)
         
-        self.LogState("")
+        self.log.LogState(self.tiles, self.robot1, self.robot2, " ")
         
+
+    def SetPolyomino(self, poly="Default"):
+        self.tiles.fill(0)
+        
+        if poly == "single":
+            self.tiles[7,7] = 1
+        elif poly == "spiral!":
+            self.tiles[(7,8)] = 1
+            self.tiles[(7,9)] = 1
+            self.tiles[(7,10)] = 1
+            self.tiles[(6,10)] = 1
+            self.tiles[(5,10)] = 1
+            self.tiles[(5,9)] = 1
+            self.tiles[(5,8)] = 1
+            self.tiles[(5,7)] = 1
+            self.tiles[(5,6)] = 1     
+            self.tiles[(5,5)] = 1
+            self.tiles[(6,5)] = 1
+            self.tiles[(7,5)] = 1
+            self.tiles[(8,5)] = 1
+            self.tiles[(9,5)] = 1
+            self.tiles[(9,6)] = 1
+            self.tiles[(9,7)] = 1
+            self.tiles[(9,8)] = 1
+            self.tiles[(9,9)] = 1
+        elif poly == "smallL":
+            self.tiles[(7,10)] = 1
+            self.tiles[(7,9)] = 1
+            self.tiles[(7,8)] = 1
+            self.tiles[(7,7)] = 1
+            self.tiles[(7,6)] = 1
+            self.tiles[(8,6)] = 1
+            self.tiles[(9,6)] = 1
+            self.tiles[(10,6)] = 1
+            self.tiles[(11,6)] = 1
+        else:
+            self.tiles[(6,7)] = 1
+            self.tiles[(7,7)] = 1
+            self.tiles[(7,6)] = 1
+            self.tiles[(8,6)] = 1
+            
+        self.log.Reset()
+        self.robot1 = [list(self.start1), STATE_SEARCHSOUTH, SOUTH]   # Start at the location in state 1, facing South
+        self.robot2 = [list(self.start2), STATE_IDLE, SOUTH] # Start at the location in state 0, facing South
+        self.log.LogState(self.tiles, self.robot1, self.robot2, "Initial Board State")
+        self.Generate()
+
     def SetStep(self, step):
-        self.step = step
-        if step < len(self.log):
-            self.tiles.fill(0)
-            tile_list, self.robot1, self.robot2, message = self.log[step]
-            for loc in tile_list:
-                self.tiles[loc] = 1
+        self.tiles.fill(0)
+        tile_list, self.robot1, self.robot2, message = self.log.GetStep(step)
+        for loc in tile_list:
+            self.tiles[loc] = 1
 
             
     def SetState(self, robot, state):
         """ Set the state of the specified robot """
         robot[1] = state
+    
     
     def CheckState(self, robot, state):
         return robot[1] == state
@@ -237,57 +277,71 @@ class Board:
         """ Place a tile at the tuple location. """
         self.tiles[loc] = 1
     
+    
     def RemoveTile(self, loc):
         """ Remove a tile from the tuple location. """ # ToDo: Add in a check to see if there is a tile there?
         self.tiles[loc] = 0
     
+    
     def MoveRobot(self, robot, direction):
+        print("Look! {}".format(robot))
         robot[0] = list(map(add, robot[0], MOVES[direction]))
+    
     
     def GetLocation(self, robot, direction):
         return tuple(map(add, robot[0], MOVES[direction]))
     
+    
     def MoveRobotForward(self, robot):
         self.MoveRobot(robot, robot[2])
+    
     
     def MoveRobotBackward(self, robot):
         self.MoveRobot(robot, BEHIND[robot[2]])
     
+    
     def TurnRobotRight(self, robot):
         robot[2] = CLOCKWISE[robot[2]]
+    
     
     def TurnRobotLeft(self, robot):
         robot[2] = COUNTERCLOCKWISE[robot[2]]
     
+    
     def LookForRobot(self):
         loc = self.GetLocation(self.robot1, self.robot1[2])
-        print("{}({}-{}) - {}".format(loc, self.robot1[0], self.robot1[2], self.robot2[0]))
+        #print("{}({}-{}) - {}".format(loc, self.robot1[0], self.robot1[2], self.robot2[0]))
         if tuple(self.robot2[0]) == loc:
             self.SetState(self.robot1, STATE_FINISH)
             self.PlaceTile(tuple(self.robot1[0]))
-            print("We Did it!!!")
+            #print("We Did it!!!")
             return True
         return False
+    
     
     def LookAhead(self, robot):
         """ Returns true if the space ahead is open """
         loc = self.GetLocation(robot, robot[2])
         return self.tiles[loc] == 0
     
+    
     def LookBehind(self, robot):
         """ Returns true if the space behind the robot is open """
         loc = self.GetLocation(robot, BEHIND[robot[2]])
         return self.tiles[loc] == 0 and tuple(self.robot2[0]) != loc
+    
     
     def LookLeft(self, robot):
         """ Returns true if the space to the left of the robot is open """
         loc = self.GetLocation(robot, COUNTERCLOCKWISE[robot[2]])
         return self.tiles[loc] == 0 and tuple(self.robot2[0]) != loc
     
+    
     def LookRight(self, robot):
         """ Returns true if the space to the right of the robot is open """
         loc = self.GetLocation(robot, CLOCKWISE[robot[2]])
         return self.tiles[loc] == 0 and tuple(self.robot2[0]) != loc
+    
     
     @staticmethod
     def _Hexify(num):
