@@ -26,7 +26,7 @@ class AutomatonUIApp:
         self.labelTop.pack(side=tk.TOP)
                 
         self.tkvar = tk.StringVar(master)
-        self.choices = {"single", "simpeleZ", "smallL", "spiral!"}
+        self.choices = {"single", "simpeleZ", "smallL", "spiral!", "smallHook"}
         self.tkvar.set("simpleZ")
         self.popupMenu = tk.OptionMenu(self.frame, self.tkvar, *self.choices)
         self.tkvar.trace('w', self.SetPolyomino)
@@ -40,7 +40,7 @@ class AutomatonUIApp:
         #self.iterateButton = tk.Button(self.frame, text='Iterate', command=self.Iterate)        
         #self.iterateButton.pack(side=tk.BOTTOM)   
 
-        self.slider = tk.Scale(self.frame, from_=0, to=200, orient=tk.VERTICAL, 
+        self.slider = tk.Scale(self.frame, from_=0, to=250, orient=tk.VERTICAL, 
                                resolution=1, length=400, sliderlength=20, command=self.SetCurrentStep)
         self.slider.pack(side=tk.BOTTOM)
 
