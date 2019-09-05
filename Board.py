@@ -270,6 +270,41 @@ class Board:
             self.tiles[(12,8)] = 1
             self.tiles[(12,7)] = 1
             self.tiles[(12,6)] = 1
+        elif poly == "UH":
+            self.tiles[(3,12)] = 1
+            self.tiles[(3,11)] = 1
+            self.tiles[(3,10)] = 1
+            self.tiles[(3,9)] = 1
+            self.tiles[(3,8)] = 1
+            self.tiles[(3,7)] = 1
+            self.tiles[(4,7)] = 1
+            self.tiles[(5,7)] = 1
+            self.tiles[(6,7)] = 1
+            self.tiles[(7,7)] = 1
+            self.tiles[(7,8)] = 1
+            self.tiles[(7,9)] = 1
+            self.tiles[(7,10)] = 1
+            self.tiles[(7,11)] = 1
+            self.tiles[(7,12)] = 1
+            # H
+            self.tiles[(5,9)] = 1
+            self.tiles[(5,8)] = 1
+            self.tiles[(5,6)] = 1
+            self.tiles[(5,5)] = 1
+            self.tiles[(5,4)] = 1
+            self.tiles[(5,3)] = 1
+            self.tiles[(5,2)] = 1
+            self.tiles[(6,5)] = 1
+            self.tiles[(7,5)] = 1
+            self.tiles[(8,5)] = 1
+            self.tiles[(9,5)] = 1
+            self.tiles[(9,6)] = 1
+            self.tiles[(9,7)] = 1
+            self.tiles[(9,8)] = 1
+            self.tiles[(9,9)] = 1
+            self.tiles[(9,4)] = 1
+            self.tiles[(9,3)] = 1
+            self.tiles[(9,2)] = 1
         else:
             self.tiles[(6,7)] = 1
             self.tiles[(7,7)] = 1
