@@ -34,6 +34,9 @@ STATE_BACKTRACK = 6
 STATE_CHECKFORWARD = 7
 STATE_SHIFT = 8
 STATE_FINISH = 10
+STATE_TILE_MEMBERSHIP_SET_MARKER = 30
+STATE_TILE_MEMBERSHIP_CHEAPCHECK = 31
+STATE_TILE_MEMBERSHIP_START_SEARCH = 32
 STATE_MARK_START = -1
 
 class Board:
@@ -128,12 +131,12 @@ class Board:
         
         if self.CheckState(self.robot2, STATE_MARK_START):
             self.SetState(self.robot2, STATE_IDLE)
-            self.MoveRobotForward(self.robot2)
+            #self.MoveRobotForward(self.robot2)
         
-        if self.LookForRobot():
-            print("Found a robot!")
-            self.log.LogState(self.tiles, self.robot1, self.robot2, "Finished!")
-            return
+        #if self.LookForRobot():
+        #    print("Found a robot!")
+        #    self.log.LogState(self.tiles, self.robot1, self.robot2, "Finished!")
+        #    return
         
         if self.CheckState(self.robot1, STATE_SEARCHSOUTH): #this robot must search for bottom
             self.SearchSouth()
@@ -186,13 +189,41 @@ class Board:
             self.TurnRobotRight(self.robot1)
             self.SetState(self.robot1, STATE_SHIFT_BLOCK)
             
-        elif self.CheckState(self.robot1, STATE_FORGEAHEAD):
+        elif self.CheckState(self.robot1, STATE_FORGEAHEAD): # Move forward after a turn to the right
             if self.LookRight(self.robot1) and self.LookLeft(self.robot1) and self.LookAhead(self.robot1):
                 self.MoveRobotForward(self.robot1)
                 self.PlaceTile(loc) # Place a tile on the square that I left
                 self.SetState(self.robot1,STATE_BUILDINGBB)
             else:
-                self.SetState(self.robot1, STATE_BACKTRACK) 
+                if not self.LookAhead(self.robot1):
+                    self.SetState(self.robot1, STATE_TILE_MEMBERSHIP_CHEAPCHECK) #Start to figure out what we are doing
+                    self.MoveRobotForward(self.robot1)
+                else:
+                    self.SetState(self.robot1, STATE_BACKTRACK)
+
+        elif self.CheckState(self.robot1, STATE_TILE_MEMBERSHIP_CHEAPCHECK): # Step on to the tile ahead and do the cheap check
+            if not self.LookRight(self.robot1) and not self.LookLeft(self.robot1) and not self.LookAhead(self.robot1):
+                self.MoveRobotBackward(self.robot1)
+                self.SetState(self.robot1, STATE_BACKTRACK)
+                # This is a polyonmino
+            elif self.LookForRobot():
+                if self.IsRobot1BehindRobot2(): 
+                    self.MoveRobotBackward(self.robot1) # On the Polyomino
+                    self.SetState(self.robot1, STATE_BACKTRACK)
+                else:
+                    if self.IsRobot2AtRightOfRobot1():
+                        locBack = self.GetLocation(self.robot1, BEHIND[self.robot1[2]])
+                        self.PlaceTile(locBack) # Place a tile on the square that I left
+                        self.SetState(self.robot1, STATE_FINISH)
+                    # if Robot1 came from below, there is 
+                    else:
+                        pass # We need to do some shifting to fix this
+
+            else:
+                self.MoveRobotBackward(self.robot1)
+                self.SetState(self.robot1, STATE_BACKTRACK)
+                # To DO: Set the marker here and explore the polyomino
+            
         elif self.CheckState(self.robot1, STATE_BACKTRACK):
             # look behind
             if self.LookBehind(self.robot1): # See if there is a tile behind me
@@ -217,6 +248,7 @@ class Board:
                 self.SetState(self.robot1, STATE_CHECKFORWARD)
         
         self.log.LogState(self.tiles, self.robot1, self.robot2, " ")
+        print("I took a step!")
         
 
     def SetPolyomino(self, poly="Default"):
@@ -270,6 +302,18 @@ class Board:
             self.tiles[(12,8)] = 1
             self.tiles[(12,7)] = 1
             self.tiles[(12,6)] = 1
+        elif poly == "backwardsC":
+            self.tiles[(7,9)] = 1
+            self.tiles[(7,8)] = 1
+            self.tiles[(8,9)] = 1
+            self.tiles[(9,9)] = 1
+            self.tiles[(9,8)] = 1
+            self.tiles[(9,7)] = 1
+            self.tiles[(9,6)] = 1
+            self.tiles[(9,5)] = 1
+            self.tiles[(9,4)] = 1
+            self.tiles[(8,4)] = 1
+            self.tiles[(7,4)] = 1
         else:
             self.tiles[(6,7)] = 1
             self.tiles[(7,7)] = 1
@@ -376,15 +420,17 @@ class Board:
     
     
     def LookForRobot(self):
-        loc = self.GetLocation(self.robot1, self.robot1[2])
-        #print("{}({}-{}) - {}".format(loc, self.robot1[0], self.robot1[2], self.robot2[0]))
-        if tuple(self.robot2[0]) == loc:
-            self.SetState(self.robot1, STATE_FINISH)
-            self.PlaceTile(tuple(self.robot1[0]))
-            #print("We Did it!!!")
-            return True
-        return False
+        distance = abs(self.robot1[0][0] - self.robot2[0][0]) + abs(self.robot1[0][1] - self.robot2[0][1])
+        return distance == 1
     
+    
+    def IsRobot1BehindRobot2(self):
+        loc = self.GetLocation(self.robot2, BEHIND[self.robot2[2]])
+        return loc == tuple(self.robot1[0])
+    
+    def IsRobot2AtRightOfRobot1(self):
+        loc = self.GetLocation(self.robot1, CLOCKWISE[self.robot1[2]])
+        return loc == tuple(self.robot2[0])
     
     def LookAhead(self, robot):
         """ Returns true if the space ahead is open """

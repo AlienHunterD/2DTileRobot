@@ -26,7 +26,7 @@ class AutomatonUIApp:
         self.labelTop.pack(side=tk.TOP)
                 
         self.tkvar = tk.StringVar(master)
-        self.choices = {"single", "simpeleZ", "smallL", "spiral!", "smallHook"}
+        self.choices = {"single", "simpeleZ", "smallL", "spiral!", "smallHook", "backwardsC"}
         self.tkvar.set("simpleZ")
         self.popupMenu = tk.OptionMenu(self.frame, self.tkvar, *self.choices)
         self.tkvar.trace('w', self.SetPolyomino)
