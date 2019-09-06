@@ -12,7 +12,7 @@ import Board
 class AutomatonUIApp:
 
     def __init__(self, master):
-        self.board = Board.Board((7,8), (7,9))
+        self.board = Board.Board()
         self.frameMain = tk.Frame(master, width=1920, height=1080, bd=1)
         self.frameMain.pack(side=tk.LEFT)
         self.canvasBoard = tk.Canvas(self.frameMain, width=1200, height=900)
@@ -40,8 +40,8 @@ class AutomatonUIApp:
         #self.iterateButton = tk.Button(self.frame, text='Iterate', command=self.Iterate)        
         #self.iterateButton.pack(side=tk.BOTTOM)   
 
-        self.slider = tk.Scale(self.frame, from_=0, to=250, orient=tk.VERTICAL, 
-                               resolution=1, length=400, sliderlength=20, command=self.SetCurrentStep)
+        self.slider = tk.Scale(self.frame, from_=0, to=800, orient=tk.VERTICAL, 
+                               resolution=1, length=800, sliderlength=20, command=self.SetCurrentStep)
         self.slider.pack(side=tk.BOTTOM)
 
         #self.fillButton = tk.Button(self.frame, text='Fill', command=self.DrawFill)        
