@@ -7,6 +7,7 @@ University of Houston
 """
 import tkinter as tk
 from tkinter import ttk
+import time
 import Board
 
 class AutomatonUIApp:
@@ -37,8 +38,8 @@ class AutomatonUIApp:
         #self.pathBox.pack(side=tk.TOP)
         #self.pathButton = tk.Button(self.frame, text='Path', command=self.DrawPath)        
         #self.pathButton.pack(side=tk.TOP)        
-        #self.iterateButton = tk.Button(self.frame, text='Iterate', command=self.Iterate)        
-        #self.iterateButton.pack(side=tk.BOTTOM)   
+        self.iterateButton = tk.Button(self.frame, text='Iterate', command=self.Iterate)        
+        self.iterateButton.pack(side=tk.BOTTOM)   
 
         self.slider = tk.Scale(self.frame, from_=0, to=800, orient=tk.VERTICAL, 
                                resolution=1, length=800, sliderlength=20, command=self.SetCurrentStep)
@@ -74,6 +75,14 @@ class AutomatonUIApp:
         print(self.tkvar.get())
         self.board.SetPolyomino(self.tkvar.get())
         self.DrawBoard()
+    
+    def Iterate(self):
+        for step in range(800):
+            temp = self.board.SetStep(step)
+            self.DrawBoard()
+            time.sleep(0.1)
+            if temp:
+                return
     
     
 root = tk.Tk()

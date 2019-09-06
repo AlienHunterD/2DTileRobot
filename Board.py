@@ -531,6 +531,8 @@ class Board:
         tile_list, self.robot1, self.robot2, message = self.log.GetStep(step)
         for loc in tile_list:
             self.tiles[loc] = 1
+        
+        return self.robot1[1] == STATE_FINISH
 
             
     def SetState(self, robot, state):
