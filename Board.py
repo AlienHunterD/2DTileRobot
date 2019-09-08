@@ -54,6 +54,7 @@ class Board:
         # TODO: names for states
         self.robot1 = [[7,8], STATE_SEARCHSOUTH, SOUTH]   # Start at the location in state 1, facing South
         self.robot2 = [[7,9], STATE_IDLE, SOUTH] # Start at the location in state 0, facing South
+        self.results = [0,0,0]
         self.size = dims        
         self.width, self.height = dims
         self.tiles = np.zeros(dims, dtype=int)
@@ -120,7 +121,14 @@ class Board:
         canvas.create_text((x+deltaX/2, y+deltaY/2), anchor='center', font=("Purisa", 14), text=str(self.robot2[1]))
 
         canvas.create_text((20,18), anchor='sw', text="{}x{}".format(self.width,self.height))
-        
+    
+    def ShowResults(self, canvas, size = (400,400), offset = 20):
+        steps,moves,placed,picked = self.results
+        canvas.create_text((offset, 30), anchor='nw', font=("Purisa", 14), text="Step: {}".format(steps))
+        canvas.create_text((offset, 60), anchor='nw', font=("Purisa", 14), text="Robot Moves: {}".format(moves))
+        canvas.create_text((offset, 90), anchor='nw', font=("Purisa", 14), text="Tiles Placed: {}".format(placed))
+        canvas.create_text((offset, 120), anchor='nw', font=("Purisa", 14), text="Tiles Removed: {}".format(picked))
+
         
     def Generate(self):
         """ Generate the initial tile setup. """
@@ -409,9 +417,7 @@ class Board:
                 self.MoveRobotForward(self.robot1)
             else:
                 self.SetState(self.robot1, STATE_CHECKFORWARD)
-        
-        self.log.LogState(self.tiles, self.robot1, self.robot2, " ")
-        print("I took a step!")
+        self.log.LogState(self.tiles, self.robot1, self.robot2, " ", self.results)
         
 
     def SetPolyomino(self, poly="Default"):
@@ -523,12 +529,14 @@ class Board:
         self.log.Reset()
         self.robot1 = [start1, STATE_SEARCHSOUTH, SOUTH]   # Start at the location in state 1, facing South
         self.robot2 = [start2, STATE_IDLE, SOUTH] # Start at the location in state 0, facing South
-        self.log.LogState(self.tiles, self.robot1, self.robot2, "Initial Board State")
+        self.results = [0,0,0,0]
+        self.log.LogState(self.tiles, self.robot1, self.robot2, "Initial Board State", self.results)
         self.Generate()
 
     def SetStep(self, step):
         self.tiles.fill(0)
-        tile_list, self.robot1, self.robot2, message = self.log.GetStep(step)
+        tile_list, self.robot1, self.robot2, message, self.results = self.log.GetStep(step)
+        self.results[0] = step
         for loc in tile_list:
             self.tiles[loc] = 1
         
@@ -589,16 +597,19 @@ class Board:
     def PlaceTile(self, loc):
         """ Place a tile at the tuple location. """
         self.tiles[loc] = 1
+        self.results[2] +=1
     
     
     def RemoveTile(self, loc):
         """ Remove a tile from the tuple location. """ # ToDo: Add in a check to see if there is a tile there?
         self.tiles[loc] = 0
+        self.results[3] +=1
     
     
     def MoveRobot(self, robot, direction):
         print("Look! {}".format(robot))
         robot[0] = list(map(add, robot[0], MOVES[direction]))
+        self.results[1] += 1
     
     
     def GetLocation(self, robot, direction):

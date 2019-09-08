@@ -16,13 +16,13 @@ class AutomatonUIApp:
         self.board = Board.Board()
         self.frameMain = tk.Frame(master, width=1920, height=1080, bd=1)
         self.frameMain.pack(side=tk.LEFT)
-        self.canvasBoard = tk.Canvas(self.frameMain, width=1200, height=900)
+        self.canvasResult = tk.Canvas(self.frameMain, width=450, height=900)
+        self.canvasResult.pack(side=tk.LEFT, fill=tk.BOTH)
+        self.canvasBoard = tk.Canvas(self.frameMain, width=900, height=900)
         self.canvasBoard.pack(side=tk.LEFT, fill=tk.BOTH)
         self.frame = tk.Frame(master, bd=2, relief=tk.RAISED)
         self.frame.pack(side=tk.RIGHT, fill=tk.BOTH)
         
-        #self.genButton = tk.Button(self.frame, text='Run', command=self.Run)        
-        #self.genButton.pack(side=tk.TOP)
         self.labelTop = tk.Label(self.frame, text = "1. Select a Polyomino configuration")
         self.labelTop.pack(side=tk.TOP)
                 
@@ -33,30 +33,22 @@ class AutomatonUIApp:
         self.tkvar.trace('w', self.SetPolyomino)
         self.popupMenu.pack(side=tk.TOP)
         
-        #self.showPath = tk.IntVar()
-        #self.pathBox = tk.Checkbutton(self.frame, text='Path', command=self.DrawPath, variable=self.showPath)
-        #self.pathBox.pack(side=tk.TOP)
-        #self.pathButton = tk.Button(self.frame, text='Path', command=self.DrawPath)        
-        #self.pathButton.pack(side=tk.TOP)        
         self.iterateButton = tk.Button(self.frame, text='Iterate', command=self.Iterate)        
         self.iterateButton.pack(side=tk.BOTTOM)   
 
         self.slider = tk.Scale(self.frame, from_=0, to=800, orient=tk.VERTICAL, 
                                resolution=1, length=800, sliderlength=20, command=self.SetCurrentStep)
         self.slider.pack(side=tk.BOTTOM)
-
-        #self.fillButton = tk.Button(self.frame, text='Fill', command=self.DrawFill)        
-        #self.fillButton.pack(side=tk.TOP)        
-        
-        #self.button = tk.Button(self.frame, text="QUIT", fg="red", command=self.frame.quit)
-        #self.button.pack(side=tk.BOTTOM)
         
         self.DrawBoard()
     
     def DrawBoard(self):
         self.canvasBoard.delete(tk.ALL)
+        self.canvasResult.delete(tk.ALL)
         self.board.Draw(self.canvasBoard,(800,800))
+        self.board.ShowResults(self.canvasResult,(400,800))
         self.canvasBoard.update()
+        self.canvasResult.update()
 
 
     def Run(self):
@@ -75,6 +67,7 @@ class AutomatonUIApp:
         print(self.tkvar.get())
         self.board.SetPolyomino(self.tkvar.get())
         self.DrawBoard()
+        self.slider.set(0)
     
     def Iterate(self):
         for step in range(800):

@@ -19,7 +19,7 @@ class MoveLog:
         self.log = {}
 
 
-    def LogState(self, tiles, robot1, robot2, message):
+    def LogState(self, tiles, robot1, robot2, message, results):
         tile_list = []
         width, height = tiles.shape
         # Log in all the tiles
@@ -28,7 +28,7 @@ class MoveLog:
                 if tiles[u,v] == 1:
                     tile_list.append((u,v))
         
-        self.log[self.currentStep] = (tile_list, list(robot1), list(robot2), message)
+        self.log[self.currentStep] = (tile_list, list(robot1), list(robot2), message, results)
         self.currentStep += 1
     
     
