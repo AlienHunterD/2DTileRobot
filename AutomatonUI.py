@@ -27,7 +27,7 @@ class AutomatonUIApp:
         self.labelTop.pack(side=tk.TOP)
                 
         self.tkvar = tk.StringVar(master)
-        self.choices = {"single", "simpeleZ", "smallL", "spiral!", "smallHook", "backwardsC","UH"}
+        self.choices = {"single", "simpeleZ", "smallL", "spiral!", "smallHook", "backwardsC", "hookedN","UH"}
         self.tkvar.set("simpleZ")
         self.popupMenu = tk.OptionMenu(self.frame, self.tkvar, *self.choices)
         self.tkvar.trace('w', self.SetPolyomino)
@@ -66,8 +66,10 @@ class AutomatonUIApp:
     def SetPolyomino(self, *args):
         print(self.tkvar.get())
         self.board.SetPolyomino(self.tkvar.get())
-        self.DrawBoard()
         self.slider.set(0)
+        self.slider.update()
+        self.DrawBoard()
+        
     
     def Iterate(self):
         for step in range(800):

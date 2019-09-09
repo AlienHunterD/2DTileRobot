@@ -40,6 +40,7 @@ STATE_TILE_MEMBERSHIP_SET_MARKER = 30
 STATE_TILE_MEMBERSHIP_CHEAPCHECK = 31
 STATE_TILE_MEMBERSHIP_START_SEARCH = 32
 STATE_TILE_MEMBERSHIP_SEARCH = 33
+STATE_SHIFT_AND_CLOSE = 44
 STATE_CLOSE_THE_GAP = 49
 STATE_FIND_ROBOT2_TO_DELETE = 50
 STATE_FOLLOW_ME_AND_DELETE = 51
@@ -373,9 +374,32 @@ class Board:
                 self.MoveRobotForward(self.robot1)
             else:
                 self.MoveRobotForward(self.robot1)
-                self.PlaceTile(tuple(self.robot1[0])) # Place the tile in the space where the robot now is
-                self.SetState(self.robot1, STATE_CLOSE_THE_GAP)
+                # To Do: Chec here to see if a shif is needed to the left
+                print("Stepped into the gap")
+                lookAhead = list(map(add, self.robot1[0], MOVES[self.robot1[2]]))
+                if self.CheckCorrnerTile(lookAhead): # We are at a corner, proceed
+                    self.PlaceTile(tuple(self.robot1[0])) # Place the tile in the space where the robot now is
+                    self.SetState(self.robot1, STATE_CLOSE_THE_GAP)
+                else: # We are not on a coner, shift to find one
+                    self.PlaceTile(tuple(self.robot1[0])) # Place the tile in the space where the robot now is
+                    self.SetState(self.robot1, STATE_SHIFT_AND_CLOSE)
         
+        # ********************************************************************************
+        #
+        # ********************************************************************************         
+        elif self.CheckState(self.robot1, STATE_SHIFT_AND_CLOSE):
+            if self.LookBehind(self.robot1):
+                self.TurnRobotLeft(self.robot1)
+                self.SetState(self.robot1, STATE_FOLLOWBB_CW_COMPLETE)
+                print("Look for a corner again!")
+            else:
+                self.MoveRobotBackward(self.robot1)
+                self.RemoveTile(loc)
+                self.TurnRobotLeft(self.robot1)
+                lookAhead = tuple(map(add, self.robot1[0], MOVES[self.robot1[2]]))
+                self.PlaceTile(lookAhead) # Place
+                self.TurnRobotRight(self.robot1)
+                print("Keep Shifting")
         # ********************************************************************************
         #
         # ********************************************************************************                
@@ -520,6 +544,19 @@ class Board:
             self.tiles[(9,4)] = 1
             self.tiles[(8,4)] = 1
             self.tiles[(7,4)] = 1
+        elif poly == "hookedN":
+            self.tiles[(7,9)] = 1
+            self.tiles[(7,8)] = 1
+            self.tiles[(8,9)] = 1
+            self.tiles[(9,9)] = 1
+            self.tiles[(10,9)] = 1
+            self.tiles[(10,8)] = 1
+            self.tiles[(10,7)] = 1
+            self.tiles[(10,6)] = 1
+            self.tiles[(10,5)] = 1
+            self.tiles[(10,4)] = 1
+            self.tiles[(9,4)] = 1
+            self.tiles[(8,4)] = 1
         else:
             self.tiles[(6,7)] = 1
             self.tiles[(7,7)] = 1
@@ -593,6 +630,19 @@ class Board:
             self.SetState(self.robot1, STATE_BUILDINGBB) # Set robot1 to search for more tiles south
             self.SetState(self.robot2, STATE_MARK_START) # Get the second robot ready to move down
             
+            
+    def CheckCorrnerTile(self, loc):
+        tile_hits = []
+        for direction in MOVES:
+            temp = tuple(map(add, loc, MOVES[direction]))
+            if self.tiles[temp] == 1:
+                tile_hits.append(direction)
+        
+        if len(tile_hits) != 2: # Corners must have 2 neighbors!
+            return False
+        
+        return not((NORTH in tile_hits and SOUTH in tile_hits) or (EAST in tile_hits and WEST in tile_hits))
+        
   
     def PlaceTile(self, loc):
         """ Place a tile at the tuple location. """
