@@ -441,7 +441,7 @@ class Board:
                 self.MoveRobotForward(self.robot1)
             else:
                 self.SetState(self.robot1, STATE_CHECKFORWARD)
-        self.log.LogState(self.tiles, self.robot1, self.robot2, " ", self.results)
+        self.log.LogState(self.tiles, self.robot1, self.robot2, " ", list(self.results))
         
 
     def SetPolyomino(self, poly="Default"):
@@ -567,7 +567,7 @@ class Board:
         self.robot1 = [start1, STATE_SEARCHSOUTH, SOUTH]   # Start at the location in state 1, facing South
         self.robot2 = [start2, STATE_IDLE, SOUTH] # Start at the location in state 0, facing South
         self.results = [0,0,0,0]
-        self.log.LogState(self.tiles, self.robot1, self.robot2, "Initial Board State", self.results)
+        self.log.LogState(self.tiles, self.robot1, self.robot2, "Initial Board State", list(self.results))
         self.Generate()
 
     def SetStep(self, step):
