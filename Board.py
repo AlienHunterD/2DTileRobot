@@ -49,10 +49,8 @@ STATE_MARK_START = -1
 STATE_MOVE_HOME = -2
 
 class Board:
-    def __init__(self, dims=(16,16)):
+    def __init__(self, dims=(20,20)):
         """ Create a board of the dimension given """
-        #TODO: dictionary for left, right, forward, backward tile locations
-        # TODO: names for states
         self.robot1 = [[7,8], STATE_SEARCHSOUTH, SOUTH]   # Start at the location in state 1, facing South
         self.robot2 = [[7,9], STATE_IDLE, SOUTH] # Start at the location in state 0, facing South
         self.results = [0,0,0]
@@ -134,7 +132,7 @@ class Board:
     def Generate(self):
         """ Generate the initial tile setup. """
         
-        for i in range(800): # Run out 100 steps in the sim
+        for i in range(2000): # Run out 100 steps in the sim
             self.Update()
         
         self.SetStep(0) # Go back to the beginning
@@ -449,120 +447,82 @@ class Board:
         start1 = [7,8]
         start2 = [7,9]
         
+        tile_set = []
+        
         if poly == "single":
             self.tiles[7,7] = 1
         elif poly == "spiral!":
-            self.tiles[(7,8)] = 1
-            self.tiles[(7,9)] = 1
-            self.tiles[(7,10)] = 1
-            self.tiles[(6,10)] = 1
-            self.tiles[(5,10)] = 1
-            self.tiles[(5,9)] = 1
-            self.tiles[(5,8)] = 1
-            self.tiles[(5,7)] = 1
-            self.tiles[(5,6)] = 1     
-            self.tiles[(5,5)] = 1
-            self.tiles[(6,5)] = 1
-            self.tiles[(7,5)] = 1
-            self.tiles[(8,5)] = 1
-            self.tiles[(9,5)] = 1
-            self.tiles[(9,6)] = 1
-            self.tiles[(9,7)] = 1
-            self.tiles[(9,8)] = 1
-            self.tiles[(9,9)] = 1
-        elif poly == "smallL":
-            self.tiles[(7,10)] = 1
-            self.tiles[(7,9)] = 1
-            self.tiles[(7,8)] = 1
-            self.tiles[(7,7)] = 1
-            self.tiles[(7,6)] = 1
-            self.tiles[(8,6)] = 1
-            self.tiles[(9,6)] = 1
-            self.tiles[(10,6)] = 1
-            self.tiles[(11,6)] = 1
+            tile_set = [(7,8), (7,9), (7,10), (6,10), (5,10), (5,9), (5,8), (5,7), (5,6),
+                        (5,5), (6,5), (7,5), (8,5), (9,5), (9,6), (9,7), (9,8), (9,9)]
+        elif poly == "L1":
+            tile_set = [(5,4), (4,4), (4,5)]
+            start1 = [4,4]
+            start2 = [4,5]
+        elif poly == "L2":
+            tile_set = [(6,4), (5,4), (4,4), (4,5), (4,6)]
+            start1 = [4,4]
+            start2 = [4,5]
+        elif poly == "L3":
+            tile_set = [(7,4), (6,4), (5,4), (4,4), (4,5), (4,6), (4,7)]
+            start1 = [4,4]
+            start2 = [4,5]
+        elif poly == "L4":
+            tile_set = [(8,4), (7,4), (6,4), (5,4), (4,4), (4,5), (4,6), (4,7), (4,8)]
+            start1 = [4,4]
+            start2 = [4,5]
+        elif poly == "L5":
+            tile_set = [(9,4), (8,4), (7,4), (6,4), (5,4), (4,4), (4,5), (4,6), (4,7),
+                        (4,8), (4,9)]
+            start1 = [4,4]
+            start2 = [4,5]
+        elif poly == "L6":
+            tile_set = [(10,4), (9,4), (8,4), (7,4), (6,4), (5,4), (4,4), (4,5), (4,6), 
+                        (4,7), (4,8), (4,9), (4,10)]
+            start1 = [4,4]
+            start2 = [4,5]
+        elif poly == "L7":
+            tile_set = [(11,4), (10,4), (9,4), (8,4), (7,4), (6,4), (5,4), (4,4), (4,5),
+                        (4,6), (4,7), (4,8), (4,9), (4,10), (4,11)]
+            start1 = [4,4]
+            start2 = [4,5]
+        elif poly == "L8":
+            tile_set = [(12,4), (11,4), (10,4), (9,4), (8,4), (7,4), (6,4), (5,4), (4,4), 
+                        (4,5), (4,6), (4,7), (4,8), (4,9), (4,10), (4,11), (4,12)]
+            start1 = [4,4]
+            start2 = [4,5]
+        elif poly == "L9":
+            tile_set = [(13,4), (12,4), (11,4), (10,4), (9,4), (8,4), (7,4), (6,4), (5,4), 
+                        (4,4), (4,5), (4,6), (4,7), (4,8), (4,9), (4,10), (4,11), (4,12),
+                        (4,13)]
+            start1 = [4,4]
+            start2 = [4,5]
+        elif poly == "L10":
+            tile_set = [(14,4), (13,4), (12,4), (11,4), (10,4), (9,4), (8,4), (7,4), (6,4),
+                        (5,4), (4,4), (4,5), (4,6), (4,7), (4,8), (4,9), (4,10), (4,11), 
+                        (4,12), (4,13), (4,14)]
+            start1 = [4,4]
+            start2 = [4,5]
         elif poly == "smallHook":
-            self.tiles[(7,10)] = 1
-            self.tiles[(7,9)] = 1
-            self.tiles[(7,8)] = 1
-            self.tiles[(7,7)] = 1
-            self.tiles[(7,6)] = 1
-            self.tiles[(8,6)] = 1
-            self.tiles[(9,6)] = 1
-            self.tiles[(10,6)] = 1
-            self.tiles[(11,6)] = 1
-            self.tiles[(11,11)] = 1
-            self.tiles[(12,11)] = 1
-            self.tiles[(12,10)] = 1
-            self.tiles[(12,9)] = 1
-            self.tiles[(12,8)] = 1
-            self.tiles[(12,7)] = 1
-            self.tiles[(12,6)] = 1
+            tile_set = [(7,10), (7,9), (7,8), (7,7), (7,6), (8,6), (9,6), (10,6), (11,6),
+                        (11,11), (12,11), (12,10), (12,9), (12,8), (12,7), (12,6)]
         elif poly == "UH":
-            self.tiles[(3,12)] = 1
-            self.tiles[(3,11)] = 1
-            self.tiles[(3,10)] = 1
-            self.tiles[(3,9)] = 1
-            self.tiles[(3,8)] = 1
-            self.tiles[(3,7)] = 1
-            self.tiles[(4,7)] = 1
-            self.tiles[(5,7)] = 1
-            self.tiles[(6,7)] = 1
-            self.tiles[(7,7)] = 1
-            self.tiles[(7,8)] = 1
-            self.tiles[(7,9)] = 1
-            self.tiles[(7,10)] = 1
-            self.tiles[(7,11)] = 1
-            self.tiles[(7,12)] = 1
-            # H
-            self.tiles[(5,9)] = 1
-            self.tiles[(5,8)] = 1
-            self.tiles[(5,6)] = 1
-            self.tiles[(5,5)] = 1
-            self.tiles[(5,4)] = 1
-            self.tiles[(5,3)] = 1
-            self.tiles[(5,2)] = 1
-            self.tiles[(6,5)] = 1
-            self.tiles[(7,5)] = 1
-            self.tiles[(8,5)] = 1
-            self.tiles[(9,5)] = 1
-            self.tiles[(9,6)] = 1
-            self.tiles[(9,7)] = 1
-            self.tiles[(9,8)] = 1
-            self.tiles[(9,9)] = 1
-            self.tiles[(9,4)] = 1
-            self.tiles[(9,3)] = 1
-            self.tiles[(9,2)] = 1
+            tile_set = [(3,12), (3,11), (3,10), (3,9), (3,8), (3,7), (4,7), (5,7), (6,7),
+                        (7,7), (7,8), (7,9), (7,10), (7,11), (7,12), # H
+                        (5,9), (5,8), (5,6), (5,5), (5,4), (5,3), (5,2), (6,5), (7,5),
+                        (8,5), (9,5), (9,6), (9,7), (9,8), (9,9), (9,4), (9,3), (9,2)]
         elif poly == "backwardsC":
-            self.tiles[(7,9)] = 1
-            self.tiles[(7,8)] = 1
-            self.tiles[(8,9)] = 1
-            self.tiles[(9,9)] = 1
-            self.tiles[(9,8)] = 1
-            self.tiles[(9,7)] = 1
-            self.tiles[(9,6)] = 1
-            self.tiles[(9,5)] = 1
-            self.tiles[(9,4)] = 1
-            self.tiles[(8,4)] = 1
-            self.tiles[(7,4)] = 1
+            tile_set = [(7,9), (7,8), (8,9), (9,9), (9,8), (9,7), (9,6), (9,5), (9,4),
+                        (8,4), (7,4)]
         elif poly == "hookedN":
-            self.tiles[(7,9)] = 1
-            self.tiles[(7,8)] = 1
-            self.tiles[(8,9)] = 1
-            self.tiles[(9,9)] = 1
-            self.tiles[(10,9)] = 1
-            self.tiles[(10,8)] = 1
-            self.tiles[(10,7)] = 1
-            self.tiles[(10,6)] = 1
-            self.tiles[(10,5)] = 1
-            self.tiles[(10,4)] = 1
-            self.tiles[(9,4)] = 1
-            self.tiles[(8,4)] = 1
+            tile_set = [(7,9), (7,8), (8,9), (9,9), (10,9), (10,8), (10,7), (10,6), (10,5),
+                        (10,4), (9,4), (8,4)]
         else:
-            self.tiles[(6,7)] = 1
-            self.tiles[(7,7)] = 1
-            self.tiles[(7,6)] = 1
-            self.tiles[(8,6)] = 1
-            
+            tile_set = [(6,7), (7,7), (7,6), (8,6)]
+        
+        
+        for point in tile_set:
+            self.tiles[point] = 1
+        
         self.log.Reset()
         self.robot1 = [start1, STATE_SEARCHSOUTH, SOUTH]   # Start at the location in state 1, facing South
         self.robot2 = [start2, STATE_IDLE, SOUTH] # Start at the location in state 0, facing South
