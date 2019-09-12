@@ -37,11 +37,12 @@ class AutomatonUIApp:
         self.iterateButton = tk.Button(self.frame, text='Iterate', command=self.Iterate)        
         self.iterateButton.pack(side=tk.BOTTOM)   
 
-        self.slider = tk.Scale(self.frame, from_=0, to=2000, orient=tk.VERTICAL, 
+        self.slider = tk.Scale(self.frame, from_=0, to=Board.MAX_MOVES, orient=tk.VERTICAL, 
                                resolution=1, length=800, sliderlength=20, command=self.SetCurrentStep)
         self.slider.pack(side=tk.BOTTOM)
         
         self.DrawBoard()
+        
     
     def DrawBoard(self):
         self.canvasBoard.delete(tk.ALL)
@@ -70,6 +71,7 @@ class AutomatonUIApp:
         self.slider.set(0)
         self.slider.update()
         self.DrawBoard()
+        print(self.board.results[4], sum(self.board.results[4]))
         
     
     def Iterate(self):

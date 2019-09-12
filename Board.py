@@ -47,6 +47,7 @@ STATE_FOLLOW_ME_AND_DELETE = 51
 STATE_MOVE_PAST_ROBOT2 = 40
 STATE_MARK_START = -1
 STATE_MOVE_HOME = -2
+MAX_MOVES = 2000
 
 class Board:
     def __init__(self, dims=(20,20)):
@@ -122,7 +123,7 @@ class Board:
         canvas.create_text((20,18), anchor='sw', text="{}x{}".format(self.width,self.height))
     
     def ShowResults(self, canvas, size = (400,400), offset = 20):
-        steps,moves,placed,picked = self.results
+        steps,moves,placed,picked,data = self.results
         canvas.create_text((offset, 30), anchor='nw', font=("Purisa", 14), text="Step: {}".format(steps))
         canvas.create_text((offset, 60), anchor='nw', font=("Purisa", 14), text="Robot Moves: {}".format(moves))
         canvas.create_text((offset, 90), anchor='nw', font=("Purisa", 14), text="Tiles Placed: {}".format(placed))
@@ -132,14 +133,14 @@ class Board:
     def Generate(self):
         """ Generate the initial tile setup. """
         
-        for i in range(2000): # Run out 100 steps in the sim
+        for i in range(MAX_MOVES): # Run out 100 steps in the sim
             self.Update()
         
         self.SetStep(0) # Go back to the beginning
         
     
     def Update(self):
-        #self.robot1.Update()
+        message = ""
         loc =  tuple(self.robot1[0])
         
         if self.CheckState(self.robot2, STATE_MARK_START):
@@ -150,10 +151,6 @@ class Board:
             self.SetState(self.robot2, STATE_IDLE)
             #self.MoveRobotForward(self.robot2)
         
-        #if self.LookForRobot():
-        #    print("Found a robot!")
-        #    self.log.LogState(self.tiles, self.robot1, self.robot2, "Finished!")
-        #    return
         # ********************************************************************************
         # Start searching to the south for a place to start
         # ********************************************************************************
@@ -212,7 +209,7 @@ class Board:
                     self.TurnRobotRight(self.robot1)
                     self.SetState(self.robot1, STATE_SHIFT_UNDO)
         # ********************************************************************************
-        
+        #
         # ********************************************************************************
         elif self.CheckState(self.robot1, STATE_SHIFT_UNDO):
             self.MoveRobotForward(self.robot1)
@@ -223,7 +220,7 @@ class Board:
                 locLeft = self.GetLocation(self.robot1, COUNTERCLOCKWISE[self.robot1[2]])
                 self.RemoveTile(locLeft)
         # ********************************************************************************
-        
+        #
         # ********************************************************************************
         elif self.CheckState(self.robot1, STATE_SHIFT_CONTINUE):
             self.MoveRobotBackward(self.robot1)
@@ -439,8 +436,30 @@ class Board:
                 self.MoveRobotForward(self.robot1)
             else:
                 self.SetState(self.robot1, STATE_CHECKFORWARD)
-        self.log.LogState(self.tiles, self.robot1, self.robot2, " ", list(self.results))
         
+        self.LogResults(message) # Log the results of the operation
+        
+
+    def LogResults(self,message):
+        if self.robot1[1] in [STATE_IDLE, STATE_SEARCHSOUTH, STATE_SEARCH_EAST_WEST]: # Initial Search States
+            self.results[4][0] +=1
+        if self.robot1[1] in [STATE_BUILDINGBB, STATE_FORGEAHEAD, STATE_SHIFT_BEGIN, 
+                      STATE_SHIFT_BLOCK, STATE_SHIFT_CONTINUE, STATE_SHIFT, STATE_CLOSE_THE_GAP,
+                      STATE_SHIFT_AND_CLOSE, STATE_TILE_MEMBERSHIP_SET_MARKER]: # Building/Shifting States
+            self.results[4][1] +=1
+        if self.robot1[1] in [STATE_SHIFT_UNDO, STATE_BACKTRACK, STATE_FOLLOW_ME_AND_DELETE]: # Delete States
+            self.results[4][2] +=1
+        if self.robot1[1] in [STATE_FOLLOWBB_CW, STATE_FOLLOWBB_CW_LOOK4MARKER, STATE_CHECKFORWARD, 
+                      STATE_FOLLOWBB_CW_COMPLETE, STATE_TILE_MEMBERSHIP_CHEAPCHECK, 
+                      STATE_TILE_MEMBERSHIP_START_SEARCH, STATE_TILE_MEMBERSHIP_SEARCH, 
+                      STATE_FIND_ROBOT2_TO_DELETE, STATE_MOVE_PAST_ROBOT2]: # Move/SearchBB States
+            self.results[4][3] +=1
+        
+        self.log.LogState(self.tiles, self.robot1, self.robot2, " ", list(self.results))
+
+
+#STATE_FINISH = 10 # Do nothing here
+
 
     def SetPolyomino(self, poly="Default"):
         self.tiles.fill(0)
@@ -526,8 +545,8 @@ class Board:
         self.log.Reset()
         self.robot1 = [start1, STATE_SEARCHSOUTH, SOUTH]   # Start at the location in state 1, facing South
         self.robot2 = [start2, STATE_IDLE, SOUTH] # Start at the location in state 0, facing South
-        self.results = [0,0,0,0]
-        self.log.LogState(self.tiles, self.robot1, self.robot2, "Initial Board State", list(self.results))
+        self.results = [0,0,0,0,[0,0,0,0]]
+        self.LogResults("Initial Board State")
         self.Generate()
 
     def SetStep(self, step):
@@ -617,7 +636,7 @@ class Board:
     
     
     def MoveRobot(self, robot, direction):
-        print("Look! {}".format(robot))
+        #print("Look! {}".format(robot))
         robot[0] = list(map(add, robot[0], MOVES[direction]))
         self.results[1] += 1
     
