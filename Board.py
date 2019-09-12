@@ -47,10 +47,10 @@ STATE_FOLLOW_ME_AND_DELETE = 51
 STATE_MOVE_PAST_ROBOT2 = 40
 STATE_MARK_START = -1
 STATE_MOVE_HOME = -2
-MAX_MOVES = 2000
+MAX_MOVES = 20000
 
 class Board:
-    def __init__(self, dims=(20,20)):
+    def __init__(self, dims=(40,40)):
         """ Create a board of the dimension given """
         self.robot1 = [[7,8], STATE_SEARCHSOUTH, SOUTH]   # Start at the location in state 1, facing South
         self.robot2 = [[7,9], STATE_IDLE, SOUTH] # Start at the location in state 0, facing South
@@ -469,6 +469,8 @@ class Board:
         tile_set = []
         
         if poly == "single":
+            start1 = [7,7]
+            start2 = [7,8]
             self.tiles[7,7] = 1
         elif poly == "spiral!":
             tile_set = [(7,8), (7,9), (7,10), (6,10), (5,10), (5,9), (5,8), (5,7), (5,6),
@@ -519,6 +521,20 @@ class Board:
             tile_set = [(14,4), (13,4), (12,4), (11,4), (10,4), (9,4), (8,4), (7,4), (6,4),
                         (5,4), (4,4), (4,5), (4,6), (4,7), (4,8), (4,9), (4,10), (4,11), 
                         (4,12), (4,13), (4,14)]
+            start1 = [4,4]
+            start2 = [4,5]
+        elif poly == "L15":
+            tile_set = [(4,4)]
+            for i in range(1,16):
+                tile_set.append((4+i ,4))
+                tile_set.append((4, 4+i))
+            start1 = [4,4]
+            start2 = [4,5]
+        elif poly == "L31":
+            tile_set = [(4,4)]
+            for i in range(1,32):
+                tile_set.append((4+i ,4))
+                tile_set.append((4, 4+i))
             start1 = [4,4]
             start2 = [4,5]
         elif poly == "smallHook":
