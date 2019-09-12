@@ -47,7 +47,7 @@ STATE_FOLLOW_ME_AND_DELETE = 51
 STATE_MOVE_PAST_ROBOT2 = 40
 STATE_MARK_START = -1
 STATE_MOVE_HOME = -2
-MAX_MOVES = 20000
+MAX_MOVES = 30000
 
 class Board:
     def __init__(self, dims=(40,40)):
@@ -535,6 +535,51 @@ class Board:
             for i in range(1,32):
                 tile_set.append((4+i ,4))
                 tile_set.append((4, 4+i))
+            start1 = [4,4]
+            start2 = [4,5]
+        elif poly[:2] == "~U":
+            size = int(poly[2:])
+            tile_set = [(4,4)]
+            for i in range(1,size):
+                tile_set.append((4+i ,4))
+                tile_set.append((4, 4+i))
+                tile_set.append((4+size-1, 4+i))
+            start1 = [4,4]
+            start2 = [4,5]
+        elif poly[:2] == "~C":
+            size = int(poly[2:])
+            tile_set = [(4,4)]
+            for i in range(1,size):
+                tile_set.append((4+i ,4))
+                tile_set.append((4, 4+i))
+                tile_set.append((4+i, 4+size-1))
+            start1 = [4,4]
+            start2 = [4,5]
+        elif poly[:2] == "~n":
+            size = int(poly[2:])
+            tile_set = []
+            for i in range(size):
+                tile_set.append((4+i ,4+size-1))
+                tile_set.append((4, 4+i))
+                tile_set.append((4+size-1, 4+i))
+            start1 = [4,4]
+            start2 = [4,5]
+        elif poly[:2] == "SQ":
+            size = int(poly[2:])
+            tile_set = []
+            for i in range(size):
+                for j in range(size):
+                    tile_set.append((4+i ,4+j))
+            start1 = [4,4]
+            start2 = [4,5]
+            
+        elif poly[:2] ==  u"~\uA73E":
+            size = int(poly[2:])
+            tile_set = []
+            for i in range(size):
+                tile_set.append((4+i ,4+size-1))
+                tile_set.append((4+i, 4))
+                tile_set.append((4+size-1, 4+i))
             start1 = [4,4]
             start2 = [4,5]
         elif poly == "smallHook":

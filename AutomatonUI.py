@@ -28,14 +28,20 @@ class AutomatonUIApp:
                 
         self.tkvar = tk.StringVar(master)
         self.choices = {"single", "simpeleZ", "L1", "L2", "L3", "L4", "L5", "L6", "L7",
-                        "L8", "L9", "L10", "L15", "L31", "spiral!", "smallHook", "backwardsC", "hookedN", "UH", "IEEE"}
+                        "L8", "L9", "L10", "L15", "L31", "spiral!", "smallHook", 
+                        "backwardsC", "hookedN", "UH", "IEEE", "~U2", "~U4", "~U8", "~U16", "~U32",
+                        "~C2", "~C4", "~C8", "~C16", "~C32", "~n2", "~n4", "~n8", "~n16", "~n32",
+                        "SQ2", "SQ4", "SQ8", "SQ16", "SQ32", u"~\uA73E2", u"~\uA73E4",
+                        u"~\uA73E8", u"~\uA73E16", u"~\uA73E32"}
         self.tkvar.set("simpleZ")
         self.popupMenu = tk.OptionMenu(self.frame, self.tkvar, *self.choices)
         self.tkvar.trace('w', self.SetPolyomino)
         self.popupMenu.pack(side=tk.TOP)
         
         self.iterateButton = tk.Button(self.frame, text='Iterate', command=self.Iterate)        
-        self.iterateButton.pack(side=tk.BOTTOM)   
+        self.iterateButton.pack(side=tk.BOTTOM)
+        self.iterateButton = tk.Button(self.frame, text='Results!', command=self.GenerateResults)        
+        self.iterateButton.pack(side=tk.BOTTOM)
 
         self.slider = tk.Scale(self.frame, from_=0, to=Board.MAX_MOVES, orient=tk.VERTICAL, 
                                resolution=1, length=800, sliderlength=20, command=self.SetCurrentStep)
@@ -81,6 +87,24 @@ class AutomatonUIApp:
             time.sleep(0.1)
             if temp:
                 return
+            
+            
+    def GenerateResults(self):
+        choices = ["single", "L1", "L3", "L7", "L15", "L31", "~U2", "~U4", "~U8",
+                   "~U16", "~U32", "~C2", "~C4", "~C8", "~C16", "~C32", "~n2", "~n4",
+                   "~n8", "~n16", "~n32", "SQ2", "SQ4", "SQ8", "SQ16", "SQ32",
+                   u"~\uA73E2", u"~\uA73E4", u"~\uA73E8", u"~\uA73E16", u"~\uA73E32"]
+        
+        print("Results:")
+        print("="*20)
+        for choice in choices:
+            print(choice)
+            self.board.SetPolyomino(choice)
+            self.slider.set(0)
+            self.slider.update()
+            self.DrawBoard()
+            print(self.board.results[4], sum(self.board.results[4]))
+        print("="*20)    
     
     
 root = tk.Tk()
