@@ -59,7 +59,7 @@ class Board:
         self.width, self.height = dims
         self.tiles = np.zeros(dims, dtype=int)
         self.log = MoveLog.MoveLog()
-        self.SetPolyomino()
+        self.SetPolyomino("NASA")
         self.SetStep(0) # Go back to the beginning
     
     def _DrawGrid(self, canvas, size, offset):
