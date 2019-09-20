@@ -32,16 +32,16 @@ class AutomatonUIApp:
                         "backwardsC", "hookedN", "UH", "IEEE", "~U2", "~U4", "~U8", "~U16", "~U32",
                         "~C2", "~C4", "~C8", "~C16", "~C32", "~n2", "~n4", "~n8", "~n16", "~n32",
                         "SQ2", "SQ4", "SQ8", "SQ16", "SQ32", u"~\uA73E2", u"~\uA73E4",
-                        u"~\uA73E8", u"~\uA73E16", u"~\uA73E32"}
-        self.tkvar.set("simpleZ")
+                        u"~\uA73E8", u"~\uA73E16", u"~\uA73E32", "NASA"}
+        self.tkvar.set("NASA")
         self.popupMenu = tk.OptionMenu(self.frame, self.tkvar, *self.choices)
         self.tkvar.trace('w', self.SetPolyomino)
         self.popupMenu.pack(side=tk.TOP)
         
         self.iterateButton = tk.Button(self.frame, text='Iterate', command=self.Iterate)        
         self.iterateButton.pack(side=tk.BOTTOM)
-        self.iterateButton = tk.Button(self.frame, text='Results!', command=self.GenerateResults)        
-        self.iterateButton.pack(side=tk.BOTTOM)
+        #self.iterateButton = tk.Button(self.frame, text='Results!', command=self.GenerateResults)        
+        #self.iterateButton.pack(side=tk.BOTTOM)
 
         self.slider = tk.Scale(self.frame, from_=0, to=Board.MAX_MOVES, orient=tk.VERTICAL, 
                                resolution=1, length=800, sliderlength=20, command=self.SetCurrentStep)
