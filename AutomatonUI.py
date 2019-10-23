@@ -27,13 +27,8 @@ class AutomatonUIApp:
         self.labelTop.pack(side=tk.TOP)
                 
         self.tkvar = tk.StringVar(master)
-        self.choices = {"single", "simpeleZ", "L1", "L2", "L3", "L4", "L5", "L6", "L7",
-                        "L8", "L9", "L10", "L15", "L31", "spiral!", "smallHook", 
-                        "backwardsC", "hookedN", "UH", "IEEE", "~U2", "~U4", "~U8", "~U16", "~U32",
-                        "~C2", "~C4", "~C8", "~C16", "~C32", "~n2", "~n4", "~n8", "~n16", "~n32",
-                        "SQ2", "SQ4", "SQ8", "SQ16", "SQ32", u"~\uA73E2", u"~\uA73E4",
-                        u"~\uA73E8", u"~\uA73E16", u"~\uA73E32", "NASA"}
-        self.tkvar.set("NASA")
+        self.choices = self.board.GetChoices()
+        self.tkvar.set(self.choices[0])
         self.popupMenu = tk.OptionMenu(self.frame, self.tkvar, *self.choices)
         self.tkvar.trace('w', self.SetPolyomino)
         self.popupMenu.pack(side=tk.TOP)
@@ -47,7 +42,7 @@ class AutomatonUIApp:
                                resolution=1, length=800, sliderlength=20, command=self.SetCurrentStep)
         self.slider.pack(side=tk.BOTTOM)
         
-        self.DrawBoard()
+        self.SetPolyomino()
         
     
     def DrawBoard(self):
@@ -75,6 +70,7 @@ class AutomatonUIApp:
         print(self.tkvar.get())
         self.board.SetPolyomino(self.tkvar.get())
         self.slider.set(0)
+        self.slider.configure(to=self.board.GetMoveCount()-1) #Note the need to offset by 1 for one-off errors
         self.slider.update()
         self.DrawBoard()
         print(self.board.results[4], sum(self.board.results[4]))

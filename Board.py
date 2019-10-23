@@ -23,8 +23,10 @@ COUNTERCLOCKWISE = {NORTH:WEST, EAST:NORTH, SOUTH:EAST, WEST:SOUTH} #Turn Left
 STATE_IDLE = 0
 STATE_SEARCHSOUTH = 1
 STATE_SEARCH_EAST_WEST = 2
-STATE_BUILDINGBB = 3
-STATE_FORGEAHEAD = 4
+STATE_BUILDINGBB = 4
+STATE_FORGEAHEAD_2 = 54
+STATE_FORGEAHEAD_1 = 55
+STATE_FORGEAHEAD_0 = 56
 STATE_SHIFT_BEGIN = 11
 STATE_SHIFT_BLOCK = 12
 STATE_SHIFT_CONTINUE = 13
@@ -47,10 +49,10 @@ STATE_FOLLOW_ME_AND_DELETE = 51
 STATE_MOVE_PAST_ROBOT2 = 40
 STATE_MARK_START = -1
 STATE_MOVE_HOME = -2
-MAX_MOVES = 20000
+MAX_MOVES = 2000
 
 class Board:
-    def __init__(self, dims=(56,56)):
+    def __init__(self, dims=(16,16)):
         """ Create a board of the dimension given """
         self.robot1 = [[7,8], STATE_SEARCHSOUTH, SOUTH]   # Start at the location in state 1, facing South
         self.robot2 = [[7,9], STATE_IDLE, SOUTH] # Start at the location in state 0, facing South
@@ -59,7 +61,7 @@ class Board:
         self.width, self.height = dims
         self.tiles = np.zeros(dims, dtype=int)
         self.log = MoveLog.MoveLog()
-        self.SetPolyomino("NASA")
+        self.SetPolyomino()
         self.SetStep(0) # Go back to the beginning
     
     def _DrawGrid(self, canvas, size, offset):
@@ -132,10 +134,14 @@ class Board:
         
     def Generate(self):
         """ Generate the initial tile setup. """
-        
-        for i in range(MAX_MOVES): # Run out 100 steps in the sim
-            self.Update()
-        
+        try:
+            for i in range(MAX_MOVES): # Run out 100 steps in the sim
+                self.Update()
+                if self.CheckState(self.robot1, STATE_FINISH):
+                    break
+        except:
+            print("Something bad happened here!")
+            
         self.SetStep(0) # Go back to the beginning
         
     
@@ -143,14 +149,15 @@ class Board:
         message = ""
         loc =  tuple(self.robot1[0])
         
+        # ********************************************************************************
+        # Actions for Robot#2
+        # ********************************************************************************
         if self.CheckState(self.robot2, STATE_MARK_START):
             self.SetState(self.robot2, STATE_IDLE)
         elif self.CheckState(self.robot2, STATE_MOVE_HOME):            
             self.MoveRobotBackward(self.robot2)
             self.TurnRobotLeft(self.robot2)
-            self.SetState(self.robot2, STATE_IDLE)
-            #self.MoveRobotForward(self.robot2)
-        
+            self.SetState(self.robot2, STATE_IDLE)        
         # ********************************************************************************
         # Start searching to the south for a place to start
         # ********************************************************************************
@@ -169,7 +176,7 @@ class Board:
                 self.TurnRobotRight(self.robot1)
                 self.MoveRobotForward(self.robot1)
                 self.PlaceTile(loc) # Place a tile on the square that I left
-                self.SetState(self.robot1,STATE_FORGEAHEAD)
+                self.SetState(self.robot1,STATE_FORGEAHEAD_2)
             else:
                 if not self.LookAhead(self.robot1):
                     self.SetState(self.robot1, STATE_TILE_MEMBERSHIP_CHEAPCHECK) #Start to figure out what we are doing
@@ -201,7 +208,7 @@ class Board:
                 self.RemoveTile(loc)
                 self.TurnRobotLeft(self.robot1)
                 self.MoveRobotForward(self.robot1)
-                if self.LookAhead(self.robot1):
+                if self.LookAhead(self.robot1):# and not self.LookLeft(self.robot1):
                     self.PlaceTile(tuple(self.robot1[0])) # Place the tile in the space where the robot now is
                     self.SetState(self.robot1, STATE_SHIFT_CONTINUE) 
                 else:
@@ -223,17 +230,51 @@ class Board:
         #
         # ********************************************************************************
         elif self.CheckState(self.robot1, STATE_SHIFT_CONTINUE):
+            if self.LookLeft(self.robot1):
+                self.SetState(self.robot1, STATE_SHIFT_BLOCK)
+            else:
+                self.RemoveTile(loc)
+                self.SetState(self.robot1, STATE_SHIFT_UNDO)
+            
             self.MoveRobotBackward(self.robot1)
             self.TurnRobotRight(self.robot1)
-            self.SetState(self.robot1, STATE_SHIFT_BLOCK)
+                
         # ********************************************************************************
         #
         # ********************************************************************************            
-        elif self.CheckState(self.robot1, STATE_FORGEAHEAD): # Move forward after a turn to the right
+        elif self.CheckState(self.robot1, STATE_FORGEAHEAD_0): # Move forward after a turn to the right
             if self.LookRight(self.robot1) and self.LookLeft(self.robot1) and self.LookAhead(self.robot1):
                 self.MoveRobotForward(self.robot1)
                 self.PlaceTile(loc) # Place a tile on the square that I left
                 self.SetState(self.robot1,STATE_BUILDINGBB)
+            else:
+                if not self.LookAhead(self.robot1):
+                    self.SetState(self.robot1, STATE_TILE_MEMBERSHIP_CHEAPCHECK) #Start to figure out what we are doing
+                    self.MoveRobotForward(self.robot1)
+                else:
+                    self.SetState(self.robot1, STATE_BACKTRACK)
+        # ********************************************************************************
+        #
+        # ********************************************************************************
+        elif self.CheckState(self.robot1, STATE_FORGEAHEAD_1): # Move forward after a turn to the right
+            if self.Look4TileRight(self.robot1) and self.LookLeft(self.robot1) and self.LookAhead(self.robot1):
+                self.MoveRobotForward(self.robot1)
+                self.PlaceTile(loc) # Place a tile on the square that I left
+                self.SetState(self.robot1,STATE_FORGEAHEAD_0)
+            else:
+                if not self.LookAhead(self.robot1):
+                    self.SetState(self.robot1, STATE_TILE_MEMBERSHIP_CHEAPCHECK) #Start to figure out what we are doing
+                    self.MoveRobotForward(self.robot1)
+                else:
+                    self.SetState(self.robot1, STATE_BACKTRACK)
+        # ********************************************************************************
+        #
+        # ********************************************************************************
+        elif self.CheckState(self.robot1, STATE_FORGEAHEAD_2): # Move forward after a turn to the right
+            if self.Look4TileRight(self.robot1) and self.LookLeft(self.robot1) and self.LookAhead(self.robot1):
+                self.MoveRobotForward(self.robot1)
+                self.PlaceTile(loc) # Place a tile on the square that I left
+                self.SetState(self.robot1,STATE_FORGEAHEAD_1)
             else:
                 if not self.LookAhead(self.robot1):
                     self.SetState(self.robot1, STATE_TILE_MEMBERSHIP_CHEAPCHECK) #Start to figure out what we are doing
@@ -351,13 +392,13 @@ class Board:
                 self.RemoveTile(locLeft)
                 #locAhead = self.GetLocation(self.robot1, self.robot1[2])
                 #self.PlaceTile(locAhead) # Place a tile on the square that I left
-                self.SetState(self.robot1, STATE_CHECKFORWARD)
+                self.SetState(self.robot1, STATE_FORGEAHEAD_1)
+                #self.SetState(self.robot1, STATE_CHECKFORWARD)
             else:
                 self.MoveRobotForward(self.robot1)
-                self.PlaceTile(tuple(self.robot1[0])) # Place the tile in the space where the robot now is
+                if self.LookLeft(self.robot1): 
+                    self.PlaceTile(tuple(self.robot1[0])) # Place the tile in the space where the robot now is
                 self.SetState(self.robot1, STATE_SHIFT_BEGIN)
-                
-        
         # ********************************************************************************
         #
         # ********************************************************************************                
@@ -443,7 +484,7 @@ class Board:
     def LogResults(self,message):
         if self.robot1[1] in [STATE_IDLE, STATE_SEARCHSOUTH, STATE_SEARCH_EAST_WEST]: # Initial Search States
             self.results[4][0] +=1
-        if self.robot1[1] in [STATE_BUILDINGBB, STATE_FORGEAHEAD, STATE_SHIFT_BEGIN, 
+        if self.robot1[1] in [STATE_BUILDINGBB, STATE_FORGEAHEAD_0, STATE_SHIFT_BEGIN, 
                       STATE_SHIFT_BLOCK, STATE_SHIFT_CONTINUE, STATE_SHIFT, STATE_CLOSE_THE_GAP,
                       STATE_SHIFT_AND_CLOSE, STATE_TILE_MEMBERSHIP_SET_MARKER]: # Building/Shifting States
             self.results[4][1] +=1
@@ -461,13 +502,14 @@ class Board:
 #STATE_FINISH = 10 # Do nothing here
 
 
-    def SetPolyomino(self, poly="Default"):
+    def SetPolyomino(self, poly="??"):
         self.tiles.fill(0)
         start1 = [7,8]
         start2 = [7,9]
         
         tile_set = []
-        
+        dims = (32,32)
+                
         if poly == "single":
             start1 = [7,7]
             start2 = [7,8]
@@ -572,7 +614,6 @@ class Board:
                     tile_set.append((4+i ,4+j))
             start1 = [4,4]
             start2 = [4,5]
-            
         elif poly[:2] ==  u"~\uA73E":
             size = int(poly[2:])
             tile_set = []
@@ -597,20 +638,30 @@ class Board:
             tile_set = [(7,9), (7,8), (8,9), (9,9), (10,9), (10,8), (10,7), (10,6), (10,5),
                         (10,4), (9,4), (8,4)]
         elif poly == "NASAsq":
+            dims = (64,64)
             tile_set = [(3, 20), (4, 20), (5, 20), (6, 20), (7, 20), (8, 20), (9, 20), (10, 20), (11, 20), (12, 20), (13, 20), (14, 20), (15, 20), (16, 20), (17, 20), (18, 20), (19, 20), (20, 20), (21, 20), (22, 20), (23, 20), (24, 20), (25, 20), (26, 20), (27, 20), (28, 20), (29, 20), (30, 20), (31, 20), (32, 20), (33, 20), (34, 20), (35, 20), (36, 20), (37, 20), (38, 20), (39, 20), (40, 20), (41, 20), (42, 20), (43, 20), (44, 20), (45, 20), (46, 20), (47, 20), (3, 19), (47, 19), (3, 18), (6, 18), (7, 18), (8, 18), (9, 18), (13, 18), (14, 18), (20, 18), (21, 18), (28, 18), (29, 18), (30, 18), (31, 18), (32, 18), (33, 18), (40, 18), (41, 18), (47, 18), (3, 17), (5, 17), (6, 17), (7, 17), (8, 17), (9, 17), (10, 17), (13, 17), (14, 17), (19, 17), (20, 17), (21, 17), (22, 17), (27, 17), (28, 17), (29, 17), (30, 17), (31, 17), (32, 17), (33, 17), (34, 17), (39, 17), (40, 17), (41, 17), (42, 17), (47, 17), (3, 16), (5, 16), (6, 16), (9, 16), (10, 16), (13, 16), (14, 16), (18, 16), (19, 16), (20, 16), (21, 16), (22, 16), (23, 16), (27, 16), (28, 16), (38, 16), (39, 16), (40, 16), (41, 16), (42, 16), (43, 16), (47, 16), (3, 15), (5, 15), (6, 15), (9, 15), (10, 15), (13, 15), (14, 15), (18, 15), (19, 15), (22, 15), (23, 15), (27, 15), (28, 15), (38, 15), (39, 15), (42, 15), (43, 15), (47, 15), (3, 14), (5, 14), (6, 14), (9, 14), (10, 14), (13, 14), (14, 14), (18, 14), (19, 14), (22, 14), (23, 14), (27, 14), (28, 14), (38, 14), (39, 14), (42, 14), (43, 14), (47, 14), (3, 13), (5, 13), (6, 13), (9, 13), (10, 13), (13, 13), (14, 13), (17, 13), (18, 13), (19, 13), (22, 13), (23, 13), (24, 13), (27, 13), (28, 13), (29, 13), (30, 13), (31, 13), (32, 13), (33, 13), (37, 13), (38, 13), (39, 13), (42, 13), (43, 13), (44, 13), (47, 13), (3, 12), (5, 12), (6, 12), (9, 12), (10, 12), (13, 12), (14, 12), (17, 12), (18, 12), (23, 12), (24, 12), (28, 12), (29, 12), (30, 12), (31, 12), (32, 12), (33, 12), (34, 12), (37, 12), (38, 12), (43, 12), (44, 12), (47, 12), (3, 11), (5, 11), (6, 11), (9, 11), (10, 11), (13, 11), (14, 11), (17, 11), (18, 11), (19, 11), (20, 11), (21, 11), (22, 11), (23, 11), (24, 11), (33, 11), (34, 11), (37, 11), (38, 11), (39, 11), (40, 11), (41, 11), (42, 11), (43, 11), (44, 11), (47, 11), (3, 10), (5, 10), (6, 10), (9, 10), (10, 10), (13, 10), (14, 10), (16, 10), (17, 10), (18, 10), (19, 10), (20, 10), (21, 10), (22, 10), (23, 10), (24, 10), (25, 10), (33, 10), (34, 10), (36, 10), (37, 10), (38, 10), (39, 10), (40, 10), (41, 10), (42, 10), (43, 10), (44, 10), (45, 10), (47, 10), (3, 9), (5, 9), (6, 9), (9, 9), (10, 9), (13, 9), (14, 9), (16, 9), (17, 9), (24, 9), (25, 9), (33, 9), (34, 9), (36, 9), (37, 9), (44, 9), (45, 9), (47, 9), (3, 8), (5, 8), (6, 8), (9, 8), (10, 8), (11, 8), (12, 8), (13, 8), (14, 8), (16, 8), (17, 8), (24, 8), (25, 8), (27, 8), (28, 8), (29, 8), (30, 8), (31, 8), (32, 8), (33, 8), (34, 8), (36, 8), (37, 8), (44, 8), (45, 8), (47, 8), (3, 7), (5, 7), (6, 7), (10, 7), (11, 7), (12, 7), (13, 7), (16, 7), (17, 7), (24, 7), (25, 7), (28, 7), (29, 7), (30, 7), (31, 7), (32, 7), (33, 7), (36, 7), (37, 7), (44, 7), (45, 7), (47, 7), (3, 6), (47, 6)]
         elif poly == "NASA":
+            dims = (64,64)
             tile_set = [(5, 7), (5, 8), (5, 9), (5, 10), (5, 11), (5, 12), (5, 13), (5,  14), (5, 15), (5, 16), (5, 17), (6, 7), (6, 8), (6, 9), (6, 10), (6, 11), (6, 12), (6, 13), (6, 14), (6, 15), (6, 16), (6, 17), (6, 18), (7, 17), (7, 18), (8, 17), (8, 18), (9, 8), (9,  9), (9, 10), (9, 11), (9, 12), (9, 13), (9, 14), (9, 15), (9, 16), (9, 17), (9, 18), (10, 7), (10, 8), (10, 9), (10, 10), (10, 11), (10, 12), (10, 13), (10, 14), (10, 15), (10, 16), (10, 17), (11, 7), (11, 8), (12, 7), (12, 8), (13, 7), (13, 8), (13,  9), (13, 10), (13, 11), (13, 12), (13, 13), (13, 14), (13,  15), (13, 16), (13, 17), (13, 18), (14, 8), (14, 9), (14, 10), (14, 11), (14, 12), (14, 13), (14, 14), (14, 15), (14, 16), (14, 17), (14, 18), (16, 7), (16, 8), (16, 9), (16, 10), (17, 7), (17,  8), (17, 9), (17, 10), (17, 11), (17, 12), (17, 13), (18, 10), (18,11), (18, 12), (18, 13), (18, 14), (18, 15), (18, 16), (19, 10), (19, 11), (19, 13), (19, 14), (19, 15), (19, 16), (19, 17), (20, 10), (20, 11), (20, 16), (20, 17), (20, 18), (21, 10), (21, 11), (21, 16), (21, 17), (21, 18), (22, 10), (22, 11), (22, 13), (22, 14), (22, 15), (22, 16), (22, 17), (23, 10), (23, 11), (23, 12), (23, 13), (23, 14), (23, 15), (23, 16), (24, 7), (24, 8), (24, 9), (24, 10), (24, 11), (24, 12), (24, 13), (25, 7), (25, 8), (25, 9), (25, 10), (27, 8), (27, 13), (27, 14), (27, 15), (27, 16), (27, 17), (28, 7), (28, 8), (28, 12), (28, 13), (28, 14), (28, 15), (28, 16), (28, 17), (28, 18), (29, 7), (29, 8), (29, 12), (29, 13), (29, 17), (29, 18), (30, 7), (30,  8), (30, 12), (30, 13), (30, 17), (30, 18), (31, 7), (31, 8), (31, 12), (31, 13), (31, 17), (31, 18), (32, 7), (32, 8), (32, 12), (32, 13), (32, 17), (32, 18), (33, 7), (33, 8), (33, 9), (33, 10), (33,11), (33, 12), (33, 13), (33, 17), (33, 18), (34, 8), (34, 9), (34, 10), (34, 11), (34, 12), (34, 17), (36, 7), (36, 8), (36, 9), (36, 10), (37, 7), (37, 8), (37, 9), (37, 10), (37, 11), (37, 12), (37, 13), (38, 10), (38, 11), (38, 12), (38, 13), (38, 14), (38, 15), (38, 16), (39, 10), (39, 11), (39, 13), (39,  14), (39, 15), (39, 16), (39, 17), (40, 10), (40, 11), (40, 16), (40, 17), (40, 18), (41, 10), (41, 11), (41, 16), (41, 17), (41, 18), (42, 10), (42, 11), (42, 13), (42, 14), (42, 15), (42, 16), (42, 17), (43, 10), (43, 11), (43, 12), (43,  13), (43, 14), (43, 15), (43, 16), (44, 7), (44, 8), (44, 9), (44, 10), (44, 11), (44, 12), (44, 13), (45, 7), (45, 8), (45, 9), (45, 10), (15, 8), (26, 8), (35, 8)]
+        elif poly == "TestV":
+            tile_set = [(8, 16), (15, 16), (8, 15), (14, 15), (15, 15), (8, 14), (13, 14), (14, 14), (8, 13), (13, 13), (8, 12), (13, 12), (8, 11), (12, 11), (13, 11), (8, 10), (12, 10), (8, 9), (12, 9), (8, 8), (9, 8), (10, 8), (11, 8), (12, 8)]
+            start1 = [8,9]
+            start2 = [8,10]
         else:
             tile_set = [(6,7), (7,7), (7,6), (8,6)]
         
-        
-        for point in tile_set:
-            self.tiles[point] = 1
-        
+        # Establish the board state
         self.log.Reset()
         self.robot1 = [start1, STATE_SEARCHSOUTH, SOUTH]   # Start at the location in state 1, facing South
         self.robot2 = [start2, STATE_IDLE, SOUTH] # Start at the location in state 0, facing South
         self.results = [0,0,0,0,[0,0,0,0]]
+        self.size = dims        
+        self.width, self.height = dims
+        self.tiles = np.zeros(dims, dtype=int)
+        
+        for point in tile_set: # set the tiles
+            self.tiles[point] = 1
+        
         self.LogResults("Initial Board State")
         self.Generate()
 
@@ -671,8 +722,12 @@ class Board:
         else:
             self.MoveRobot(self.robot1, SOUTH)
             self.MoveRobot(self.robot2, SOUTH)
-            self.SetState(self.robot1, STATE_BUILDINGBB) # Set robot1 to search for more tiles south
-            self.SetState(self.robot2, STATE_MARK_START) # Get the second robot ready to move down
+            if self.LookAhead(self.robot1):
+                self.TurnRobotRight(self.robot1)
+                self.SetState(self.robot1,STATE_FORGEAHEAD_1)
+                self.SetState(self.robot2, STATE_MARK_START) # Get the second robot ready to move down
+            else:
+                self.SetState(self.robot1,STATE_SEARCHSOUTH)            
             
             
     def CheckCorrnerTile(self, loc):
@@ -762,6 +817,11 @@ class Board:
         loc = self.GetLocation(robot, CLOCKWISE[robot[2]])
         return self.tiles[loc] == 0 and tuple(self.robot2[0]) != loc
     
+    def Look4TileRight(self, robot):
+        """ Returns true if there is no tile to the right of the robot """
+        loc = self.GetLocation(robot, CLOCKWISE[robot[2]])
+        return self.tiles[loc] == 0
+    
     def CountNeighbors(self, robot):
         count = 0
         for direction in MOVES:
@@ -770,38 +830,14 @@ class Board:
                 count += 1
         return count
     
-    @staticmethod
-    def _Hexify(num):
-        temp = hex(num)[2:]
-        if len(temp) < 2:
-            temp = '0' + temp
-        
-        return temp
-
+    def GetChoices(self):
+        return sorted(["single", "simpeleZ", "L1", "L2", "L3", "L4", "L5", "L6", "L7",
+                        "L8", "L9", "L10", "L15", "L31", "spiral!", "smallHook", 
+                        "backwardsC", "hookedN", "UH", "IEEE", "~U2", "~U4", "~U8", "~U16", "~U32",
+                        "~C2", "~C4", "~C8", "~C16", "~C32", "~n2", "~n4", "~n8", "~n16", "~n32",
+                        "SQ2", "SQ4", "SQ8", "SQ16", "SQ32", u"~\uA73E2", u"~\uA73E4",
+                        u"~\uA73E8", u"~\uA73E16", u"~\uA73E32", "NASA", "TestV"])
+                
+    def GetMoveCount(self):
+        return self.log.GetStepCount()
     
-    @staticmethod
-    def GetColor(ratio):
-        if ratio < 0.0:
-            return '#ffffff'
-        if ratio == 0.0:
-            return '#ff0000'
-        if ratio >= 1.0:
-            return '#ff00ff'
-            
-        temp = ratio * 5
-        if temp < 1.0:
-            temp = int(temp * 256)
-            return '#ff'+Maze._Hexify(temp)+'00'
-        elif temp < 2.0:
-            temp = 255-int((temp - 1.0) * 256)
-            return '#'+Maze._Hexify(temp)+'ff00'
-        elif temp < 3.0:
-            temp = int((temp - 2.0) * 256)
-            return '#00ff'+Maze._Hexify(temp)
-        elif temp < 4.0:
-            temp = 255-int((temp - 3.0) * 256)
-            return '#00'+Maze._Hexify(temp)+'ff'
-        else:
-            temp = int((temp - 4.0) * 256)
-            return '#'+Maze._Hexify(temp)+'00ff'
-            

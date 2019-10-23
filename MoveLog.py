@@ -35,4 +35,6 @@ class MoveLog:
     def GetStep(self, step):
         if step in self.log:
             return self.log[step]
-        
+    
+    def GetStepCount(self):
+        return len(self.log)
