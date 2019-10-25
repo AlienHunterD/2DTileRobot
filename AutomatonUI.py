@@ -86,10 +86,10 @@ class AutomatonUIApp:
             
             
     def GenerateResults(self):
-        choices = ["single", "L1", "L3", "L7", "L15", "L31", "~U2", "~U4", "~U8",
-                   "~U16", "~U32", "~C2", "~C4", "~C8", "~C16", "~C32", "~n2", "~n4",
-                   "~n8", "~n16", "~n32", "SQ2", "SQ4", "SQ8", "SQ16", "SQ32",
-                   u"~\uA73E2", u"~\uA73E4", u"~\uA73E8", u"~\uA73E16", u"~\uA73E32"]
+        choices = ["single", "L2", "L4", "L8", "L16", "L32", "U2", "U4", "U8",
+                   "U16", "U32", "C2", "C4", "C8", "C16", "C32", "n2", "n4",
+                   "n8", "n16", "n32", "SQ2", "SQ4", "SQ8", "SQ16", "SQ32",
+                   u"\uA73E2", u"\uA73E4", u"\uA73E8", u"\uA73E16", u"\uA73E32"]
         
         print("Results:")
         print("="*20)
@@ -108,4 +108,4 @@ root = tk.Tk()
 app = AutomatonUIApp(root)
 
 root.mainloop()
-root.destroy()
+#root.destroy()

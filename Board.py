@@ -10,7 +10,9 @@ import numpy as np
 import tkinter
 import MoveLog
 from operator import add
+from enum import Enum,auto
 
+MAX_MOVES = 5000
 NORTH = 1
 EAST = 2
 SOUTH = 4
@@ -20,42 +22,43 @@ BEHIND = {NORTH:SOUTH, EAST:WEST, SOUTH:NORTH, WEST:EAST}
 CLOCKWISE = {NORTH:EAST, EAST:SOUTH, SOUTH:WEST, WEST:NORTH} #Turn Right
 COUNTERCLOCKWISE = {NORTH:WEST, EAST:NORTH, SOUTH:EAST, WEST:SOUTH} #Turn Left
 
-STATE_IDLE = 0
-STATE_SEARCHSOUTH = 1
-STATE_SEARCH_EAST_WEST = 2
-STATE_BUILDINGBB = 4
-STATE_FORGEAHEAD_2 = 54
-STATE_FORGEAHEAD_1 = 55
-STATE_FORGEAHEAD_0 = 56
-STATE_SHIFT_BEGIN = 11
-STATE_SHIFT_BLOCK = 12
-STATE_SHIFT_CONTINUE = 13
-STATE_SHIFT_UNDO = 20
-STATE_FOLLOWBB_CW = 22
-STATE_FOLLOWBB_CW_LOOK4MARKER = 23
-STATE_FOLLOWBB_CW_COMPLETE = 24 
-STATE_BACKTRACK = 6
-STATE_CHECKFORWARD = 7
-STATE_SHIFT = 8
-STATE_FINISH = 10
-STATE_TILE_MEMBERSHIP_SET_MARKER = 30
-STATE_TILE_MEMBERSHIP_CHEAPCHECK = 31
-STATE_TILE_MEMBERSHIP_START_SEARCH = 32
-STATE_TILE_MEMBERSHIP_SEARCH = 33
-STATE_SHIFT_AND_CLOSE = 44
-STATE_CLOSE_THE_GAP = 49
-STATE_FIND_ROBOT2_TO_DELETE = 50
-STATE_FOLLOW_ME_AND_DELETE = 51
-STATE_MOVE_PAST_ROBOT2 = 40
-STATE_MARK_START = -1
-STATE_MOVE_HOME = -2
-MAX_MOVES = 2000
+class STATE(Enum):
+    IDLE = auto()
+    SEARCHSOUTH = auto()
+    SEARCH_EAST_WEST = auto()
+    BUILDINGBB = auto()
+    FORGEAHEAD_2 = auto()
+    FORGEAHEAD_1 = auto()
+    FORGEAHEAD_0 = auto()
+    SHIFT_BEGIN = auto()
+    SHIFT_BLOCK = auto()
+    SHIFT_CONTINUE = auto()
+    SHIFT_UNDO = auto()
+    FOLLOWBB_CW = auto()
+    FOLLOWBB_CW_LOOK4MARKER = auto()
+    FOLLOWBB_CW_COMPLETE = auto()
+    BACKTRACK = auto()
+    CHECKFORWARD = auto()
+    SHIFT = auto()
+    FINISH = auto()
+    TILE_MEMBERSHIP_SET_MARKER = auto()
+    TILE_MEMBERSHIP_CHEAPCHECK = auto()
+    TILE_MEMBERSHIP_START_SEARCH = auto()
+    TILE_MEMBERSHIP_SEARCH = auto()
+    SHIFT_AND_CLOSE = auto()
+    CLOSE_THE_GAP = auto()
+    FIND_ROBOT2_TO_DELETE = auto()
+    FOLLOW_ME_AND_DELETE = auto()
+    MOVE_PAST_ROBOT2 = auto()
+    MARK_START = auto()
+    MOVE_HOME = auto()
+
 
 class Board:
     def __init__(self, dims=(16,16)):
         """ Create a board of the dimension given """
-        self.robot1 = [[7,8], STATE_SEARCHSOUTH, SOUTH]   # Start at the location in state 1, facing South
-        self.robot2 = [[7,9], STATE_IDLE, SOUTH] # Start at the location in state 0, facing South
+        self.robot1 = [[7,8], STATE.SEARCHSOUTH, SOUTH]   # Start at the location in state 1, facing South
+        self.robot2 = [[7,9], STATE.IDLE, SOUTH] # Start at the location in state 0, facing South
         self.results = [0,0,0]
         self.size = dims        
         self.width, self.height = dims
@@ -83,14 +86,14 @@ class Board:
             canvas.create_text(loc, anchor='nw', text="{}".format(y))
 
     def DrawDirection(self, canvas, x,y,dx,dy,direction):
-        points = [x + dx/2, y + 3, x + dx/4 + 1, y + dy/4 + 3, x + 3*dx/4 - 1, y + dy/4 + 3]
+        points = [x + dx/2, y + 2, x + 2, y + dy/2 + 1, x + dx - 2, y + dy/2 + 1]
         
         if direction == SOUTH:
-            points = [x + dx/2, y + dy - 3,  x + dx/4 + 1, y + 3*dy/4 - 3, x + 3*dx/4 - 1, y + 3*dy/4 - 3]
+            points = [x + dx/2, y + dy - 2, x + 2, y + dy/2 - 1, x + dx - 2, y + dy/2 - 1]
         elif direction == EAST:
-            points = [x + 3*dx/4 - 1, y+dy/4+3, x + 3*dx/4 - 1, y + 3*dy/4-3, x+dx-3, y + dy/2]
+            points = [x + dx/2 - 2, y + 2, x + dx/2 - 2, y + dy - 2, x + dx - 2, y + dy/2]
         elif direction == WEST:
-            points = [x + dx/4 - 1, y+dy/4+3, x + dx/4 - 1, y + 3*dy/4-3, x+3, y + dy/2]
+            points = [x + dx/2 + 2, y + 2, x + dx/2 + 2, y + dy - 2, x + 2, y + dy/2]
         
         canvas.create_polygon(points, outline='black', fill='white', width=1)
 
@@ -113,14 +116,14 @@ class Board:
         y = offset + (self.height-v-1)*deltaY # Flip the y
         canvas.create_oval((x+2, y+2, x+deltaX-2, y+deltaY-2),fill="red")
         self.DrawDirection(canvas, x, y, deltaX, deltaY, self.robot1[2])
-        canvas.create_text((x+deltaX/2, y+deltaY/2), anchor='center', font=("Purisa", 14), text=str(self.robot1[1]))
+        #canvas.create_text((x+deltaX/2, y+deltaY/2), anchor='center', font=("Purisa", 14), text=str(self.robot1[1].value))
         
         u, v = self.robot2[0]
         x = offset + u*deltaX 
         y = offset + (self.height-v-1)*deltaY # Flip the y
         canvas.create_oval((x+2, y+2, x+deltaX-2, y+deltaY-2),fill="blue")
         self.DrawDirection(canvas, x, y, deltaX, deltaY, self.robot2[2])
-        canvas.create_text((x+deltaX/2, y+deltaY/2), anchor='center', font=("Purisa", 14), text=str(self.robot2[1]))
+        #canvas.create_text((x+deltaX/2, y+deltaY/2), anchor='center', font=("Purisa", 14), text=str(self.robot2[1].value))
 
         canvas.create_text((20,18), anchor='sw', text="{}x{}".format(self.width,self.height))
     
@@ -130,6 +133,11 @@ class Board:
         canvas.create_text((offset, 60), anchor='nw', font=("Purisa", 14), text="Robot Moves: {}".format(moves))
         canvas.create_text((offset, 90), anchor='nw', font=("Purisa", 14), text="Tiles Placed: {}".format(placed))
         canvas.create_text((offset, 120), anchor='nw', font=("Purisa", 14), text="Tiles Removed: {}".format(picked))
+        
+        
+        # ToDo: Fix up the states into something more like a dictionary
+        canvas.create_text((offset, 180), anchor='nw', font=("Purisa", 14), text="Robot 1: {}".format(str(self.robot1[1])[6:]))
+        canvas.create_text((offset, 210), anchor='nw', font=("Purisa", 14), text="Robot 2: {}".format(str(self.robot2[1])[6:]))
 
         
     def Generate(self):
@@ -137,7 +145,7 @@ class Board:
         try:
             for i in range(MAX_MOVES): # Run out 100 steps in the sim
                 self.Update()
-                if self.CheckState(self.robot1, STATE_FINISH):
+                if self.CheckState(self.robot1, STATE.FINISH):
                     break
         except:
             print("Something bad happened here!")
@@ -152,57 +160,57 @@ class Board:
         # ********************************************************************************
         # Actions for Robot#2
         # ********************************************************************************
-        if self.CheckState(self.robot2, STATE_MARK_START):
-            self.SetState(self.robot2, STATE_IDLE)
-        elif self.CheckState(self.robot2, STATE_MOVE_HOME):            
+        if self.CheckState(self.robot2, STATE.MARK_START):
+            self.SetState(self.robot2, STATE.IDLE)
+        elif self.CheckState(self.robot2, STATE.MOVE_HOME):            
             self.MoveRobotBackward(self.robot2)
             self.TurnRobotLeft(self.robot2)
-            self.SetState(self.robot2, STATE_IDLE)        
+            self.SetState(self.robot2, STATE.IDLE)        
         # ********************************************************************************
         # Start searching to the south for a place to start
         # ********************************************************************************
-        if self.CheckState(self.robot1, STATE_SEARCHSOUTH): #this robot must search for bottom
+        if self.CheckState(self.robot1, STATE.SEARCHSOUTH): #this robot must search for bottom
             self.SearchSouth()
         # ********************************************************************************
         # After searching south look east and west for a path to continue south    
         # ********************************************************************************
-        elif self.CheckState(self.robot1, STATE_SEARCH_EAST_WEST): #this robot must search for bottom by going right or left
+        elif self.CheckState(self.robot1, STATE.SEARCH_EAST_WEST): #this robot must search for bottom by going right or left
             self.SearchEastWest()
         # ********************************************************************************            
         #
         # ********************************************************************************
-        elif self.CheckState(self.robot1, STATE_BUILDINGBB): # We are building the Bounding box
+        elif self.CheckState(self.robot1, STATE.BUILDINGBB): # We are building the Bounding box
             if self.LookRight(self.robot1) and self.LookLeft(self.robot1) and self.LookAhead(self.robot1):
                 self.TurnRobotRight(self.robot1)
                 self.MoveRobotForward(self.robot1)
                 self.PlaceTile(loc) # Place a tile on the square that I left
-                self.SetState(self.robot1,STATE_FORGEAHEAD_2)
+                self.SetState(self.robot1,STATE.FORGEAHEAD_2)
             else:
                 if not self.LookAhead(self.robot1):
-                    self.SetState(self.robot1, STATE_TILE_MEMBERSHIP_CHEAPCHECK) #Start to figure out what we are doing
+                    self.SetState(self.robot1, STATE.TILE_MEMBERSHIP_CHEAPCHECK) #Start to figure out what we are doing
                     self.MoveRobotForward(self.robot1)
                 elif self.LookLeft(self.robot1): # We see something, but not on the left and need to shift left
-                    self.SetState(self.robot1, STATE_SHIFT_BEGIN)
+                    self.SetState(self.robot1, STATE.SHIFT_BEGIN)
                 else:
-                    self.SetState(self.robot1, STATE_BACKTRACK)
+                    self.SetState(self.robot1, STATE.BACKTRACK)
         # ********************************************************************************
         #
         # ********************************************************************************
-        elif self.CheckState(self.robot1, STATE_SHIFT_BEGIN):
+        elif self.CheckState(self.robot1, STATE.SHIFT_BEGIN):
             #self.MoveRobotBackward(self.robot1)
             if not self.LookLeft(self.robot1):
                 self.MoveRobotBackward(self.robot1)
-                self.SetState(self.robot1, STATE_BACKTRACK)
+                self.SetState(self.robot1, STATE.BACKTRACK)
             else:
                 self.PlaceTile(loc)
-                self.SetState(self.robot1, STATE_SHIFT_BLOCK)
+                self.SetState(self.robot1, STATE.SHIFT_BLOCK)
         # ********************************************************************************
         #
         # ********************************************************************************
-        elif self.CheckState(self.robot1, STATE_SHIFT_BLOCK):
+        elif self.CheckState(self.robot1, STATE.SHIFT_BLOCK):
             if self.LookBehind(self.robot1):
                 self.TurnRobotLeft(self.robot1)
-                self.SetState(self.robot1, STATE_FOLLOWBB_CW)
+                self.SetState(self.robot1, STATE.FOLLOWBB_CW)
             else:
                 self.MoveRobotBackward(self.robot1)
                 self.RemoveTile(loc)
@@ -210,18 +218,18 @@ class Board:
                 self.MoveRobotForward(self.robot1)
                 if self.LookAhead(self.robot1):# and not self.LookLeft(self.robot1):
                     self.PlaceTile(tuple(self.robot1[0])) # Place the tile in the space where the robot now is
-                    self.SetState(self.robot1, STATE_SHIFT_CONTINUE) 
+                    self.SetState(self.robot1, STATE.SHIFT_CONTINUE) 
                 else:
                     self.MoveRobotBackward(self.robot1)
                     self.TurnRobotRight(self.robot1)
-                    self.SetState(self.robot1, STATE_SHIFT_UNDO)
+                    self.SetState(self.robot1, STATE.SHIFT_UNDO)
         # ********************************************************************************
         #
         # ********************************************************************************
-        elif self.CheckState(self.robot1, STATE_SHIFT_UNDO):
+        elif self.CheckState(self.robot1, STATE.SHIFT_UNDO):
             self.MoveRobotForward(self.robot1)
             if self.LookLeft(self.robot1):
-                self.SetState(self.robot1, STATE_BACKTRACK)
+                self.SetState(self.robot1, STATE.BACKTRACK)
             else:
                 self.PlaceTile(tuple(self.robot1[0])) # Place the tile in the space adjacent to the roobot then move onto it
                 locLeft = self.GetLocation(self.robot1, COUNTERCLOCKWISE[self.robot1[2]])
@@ -229,12 +237,12 @@ class Board:
         # ********************************************************************************
         #
         # ********************************************************************************
-        elif self.CheckState(self.robot1, STATE_SHIFT_CONTINUE):
+        elif self.CheckState(self.robot1, STATE.SHIFT_CONTINUE):
             if self.LookLeft(self.robot1):
-                self.SetState(self.robot1, STATE_SHIFT_BLOCK)
+                self.SetState(self.robot1, STATE.SHIFT_BLOCK)
             else:
                 self.RemoveTile(loc)
-                self.SetState(self.robot1, STATE_SHIFT_UNDO)
+                self.SetState(self.robot1, STATE.SHIFT_UNDO)
             
             self.MoveRobotBackward(self.robot1)
             self.TurnRobotRight(self.robot1)
@@ -242,100 +250,100 @@ class Board:
         # ********************************************************************************
         #
         # ********************************************************************************            
-        elif self.CheckState(self.robot1, STATE_FORGEAHEAD_0): # Move forward after a turn to the right
+        elif self.CheckState(self.robot1, STATE.FORGEAHEAD_0): # Move forward after a turn to the right
             if self.LookRight(self.robot1) and self.LookLeft(self.robot1) and self.LookAhead(self.robot1):
                 self.MoveRobotForward(self.robot1)
                 self.PlaceTile(loc) # Place a tile on the square that I left
-                self.SetState(self.robot1,STATE_BUILDINGBB)
+                self.SetState(self.robot1,STATE.BUILDINGBB)
             else:
                 if not self.LookAhead(self.robot1):
-                    self.SetState(self.robot1, STATE_TILE_MEMBERSHIP_CHEAPCHECK) #Start to figure out what we are doing
+                    self.SetState(self.robot1, STATE.TILE_MEMBERSHIP_CHEAPCHECK) #Start to figure out what we are doing
                     self.MoveRobotForward(self.robot1)
                 else:
-                    self.SetState(self.robot1, STATE_BACKTRACK)
+                    self.SetState(self.robot1, STATE.BACKTRACK)
         # ********************************************************************************
         #
         # ********************************************************************************
-        elif self.CheckState(self.robot1, STATE_FORGEAHEAD_1): # Move forward after a turn to the right
+        elif self.CheckState(self.robot1, STATE.FORGEAHEAD_1): # Move forward after a turn to the right
             if self.Look4TileRight(self.robot1) and self.LookLeft(self.robot1) and self.LookAhead(self.robot1):
                 self.MoveRobotForward(self.robot1)
                 self.PlaceTile(loc) # Place a tile on the square that I left
-                self.SetState(self.robot1,STATE_FORGEAHEAD_0)
+                self.SetState(self.robot1,STATE.FORGEAHEAD_0)
             else:
                 if not self.LookAhead(self.robot1):
-                    self.SetState(self.robot1, STATE_TILE_MEMBERSHIP_CHEAPCHECK) #Start to figure out what we are doing
+                    self.SetState(self.robot1, STATE.TILE_MEMBERSHIP_CHEAPCHECK) #Start to figure out what we are doing
                     self.MoveRobotForward(self.robot1)
                 else:
-                    self.SetState(self.robot1, STATE_BACKTRACK)
+                    self.SetState(self.robot1, STATE.BACKTRACK)
         # ********************************************************************************
         #
         # ********************************************************************************
-        elif self.CheckState(self.robot1, STATE_FORGEAHEAD_2): # Move forward after a turn to the right
+        elif self.CheckState(self.robot1, STATE.FORGEAHEAD_2): # Move forward after a turn to the right
             if self.Look4TileRight(self.robot1) and self.LookLeft(self.robot1) and self.LookAhead(self.robot1):
                 self.MoveRobotForward(self.robot1)
                 self.PlaceTile(loc) # Place a tile on the square that I left
-                self.SetState(self.robot1,STATE_FORGEAHEAD_1)
+                self.SetState(self.robot1,STATE.FORGEAHEAD_1)
             else:
                 if not self.LookAhead(self.robot1):
-                    self.SetState(self.robot1, STATE_TILE_MEMBERSHIP_CHEAPCHECK) #Start to figure out what we are doing
+                    self.SetState(self.robot1, STATE.TILE_MEMBERSHIP_CHEAPCHECK) #Start to figure out what we are doing
                     self.MoveRobotForward(self.robot1)
                 else:
-                    self.SetState(self.robot1, STATE_BACKTRACK)
+                    self.SetState(self.robot1, STATE.BACKTRACK)
         # ********************************************************************************
         #
         # ********************************************************************************
-        elif self.CheckState(self.robot1, STATE_TILE_MEMBERSHIP_CHEAPCHECK): # Step on to the tile ahead and do the cheap check
+        elif self.CheckState(self.robot1, STATE.TILE_MEMBERSHIP_CHEAPCHECK): # Step on to the tile ahead and do the cheap check
             if self.LookForRobot():
                 if self.IsRobot1BehindRobot2(): 
                     self.MoveRobotBackward(self.robot1) # On the Polyomino
-                    self.SetState(self.robot1, STATE_SHIFT_BEGIN)
+                    self.SetState(self.robot1, STATE.SHIFT_BEGIN)
                 else:
                     if self.IsRobot2AtRightOfRobot1():
                         locBack = self.GetLocation(self.robot1, BEHIND[self.robot1[2]])
                         self.PlaceTile(locBack) # Place a tile on the square that I left
-                        self.SetState(self.robot1, STATE_FINISH)
+                        self.SetState(self.robot1, STATE.FINISH)
                     # if Robot1 came from below, there is 
                     else:
                         pass # We need to do some shifting to fix this
             elif self.CountNeighbors(self.robot1) == 3 or self.CountNeighbors(self.robot1) == 1: # this is p
                 self.MoveRobotBackward(self.robot1)
-                self.SetState(self.robot1, STATE_SHIFT_BEGIN)
+                self.SetState(self.robot1, STATE.SHIFT_BEGIN)
                 # This is a polyonmino
             else: # Explore to determine if this is p or bb
                 self.MoveRobotBackward(self.robot1)
-                self.SetState(self.robot1, STATE_TILE_MEMBERSHIP_SET_MARKER)
+                self.SetState(self.robot1, STATE.TILE_MEMBERSHIP_SET_MARKER)
                 # To DO: Set the marker here and explore the polyomino
         # ********************************************************************************
         #
         # ********************************************************************************            
-        elif self.CheckState(self.robot1, STATE_TILE_MEMBERSHIP_SET_MARKER):
+        elif self.CheckState(self.robot1, STATE.TILE_MEMBERSHIP_SET_MARKER):
             self.MoveRobotBackward(self.robot1)
             if self.LookBehind(self.robot1):
                 locBack = self.GetLocation(self.robot1, BEHIND[self.robot1[2]])
                 self.PlaceTile(locBack) # Place a tile on the square that I left
-            self.SetState(self.robot1, STATE_TILE_MEMBERSHIP_START_SEARCH)
+            self.SetState(self.robot1, STATE.TILE_MEMBERSHIP_START_SEARCH)
             
         # ********************************************************************************
         #
         # ********************************************************************************            
-        elif self.CheckState(self.robot1, STATE_TILE_MEMBERSHIP_START_SEARCH):
+        elif self.CheckState(self.robot1, STATE.TILE_MEMBERSHIP_START_SEARCH):
             self.MoveRobotForward(self.robot1)
-            self.SetState(self.robot1, STATE_TILE_MEMBERSHIP_SEARCH)
+            self.SetState(self.robot1, STATE.TILE_MEMBERSHIP_SEARCH)
         # ********************************************************************************
         #
         # ********************************************************************************            
-        elif self.CheckState(self.robot1, STATE_TILE_MEMBERSHIP_SEARCH):
+        elif self.CheckState(self.robot1, STATE.TILE_MEMBERSHIP_SEARCH):
             self.MoveRobotForward(self.robot1)
             if self.LookForRobot():
                 if self.IsRobot1BehindRobot2(): # we are in p
                     self.robot1[2] = self.robot2[2] # Orient robot 1 to match robot 2
                     self.TurnRobotRight(self.robot2)
                     self.MoveRobotForward(self.robot2)
-                    self.SetState(self.robot1, STATE_MOVE_PAST_ROBOT2)
+                    self.SetState(self.robot1, STATE.MOVE_PAST_ROBOT2)
                 else: # I am not in p
                     self.TurnRobotRight(self.robot1)
                     self.TurnRobotRight(self.robot1)
-                    self.SetState(self.robot1, STATE_FOLLOWBB_CW_COMPLETE)
+                    self.SetState(self.robot1, STATE.FOLLOWBB_CW_COMPLETE)
                     # We are below the robot
             elif not self.LookRight(self.robot1):
                 self.TurnRobotRight(self.robot1)
@@ -350,38 +358,38 @@ class Board:
         # ********************************************************************************
         #
         # ********************************************************************************            
-        elif self.CheckState(self.robot1, STATE_MOVE_PAST_ROBOT2):
+        elif self.CheckState(self.robot1, STATE.MOVE_PAST_ROBOT2):
             self.MoveRobotForward(self.robot1)
-            self.SetState(self.robot1, STATE_FOLLOWBB_CW_LOOK4MARKER)
-            self.SetState(self.robot2, STATE_MOVE_HOME)
+            self.SetState(self.robot1, STATE.FOLLOWBB_CW_LOOK4MARKER)
+            self.SetState(self.robot2, STATE.MOVE_HOME)
 
 
         # ********************************************************************************
         #
         # ********************************************************************************            
-        elif self.CheckState(self.robot1, STATE_BACKTRACK):
+        elif self.CheckState(self.robot1, STATE.BACKTRACK):
             # look behind
             if self.LookBehind(self.robot1): # See if there is a tile behind me
                 self.TurnRobotLeft(self.robot1)
-                self.SetState(self.robot1, STATE_CHECKFORWARD)
+                self.SetState(self.robot1, STATE.CHECKFORWARD)
             else:
                 self.RemoveTile(loc)
                 self.MoveRobotBackward(self.robot1)
         # ********************************************************************************
         #
         # ********************************************************************************                
-        elif self.CheckState(self.robot1, STATE_CHECKFORWARD):
+        elif self.CheckState(self.robot1, STATE.CHECKFORWARD):
             if self.LookAhead(self.robot1): # if the square ahead is open
                 self.MoveRobotForward(self.robot1)
-                self.SetState(self.robot1, STATE_BUILDINGBB)
+                self.SetState(self.robot1, STATE.BUILDINGBB)
             else:
-                self.SetState(self.robot1, STATE_BACKTRACK)
+                self.SetState(self.robot1, STATE.BACKTRACK)
                 
                 
         # ********************************************************************************
         #
         # ********************************************************************************                
-        elif self.CheckState(self.robot1, STATE_FOLLOWBB_CW_LOOK4MARKER):
+        elif self.CheckState(self.robot1, STATE.FOLLOWBB_CW_LOOK4MARKER):
             if not self.LookAhead(self.robot1):
                 self.MoveRobotForward(self.robot1)
             elif not self.LookRight(self.robot1):
@@ -392,17 +400,17 @@ class Board:
                 self.RemoveTile(locLeft)
                 #locAhead = self.GetLocation(self.robot1, self.robot1[2])
                 #self.PlaceTile(locAhead) # Place a tile on the square that I left
-                self.SetState(self.robot1, STATE_FORGEAHEAD_1)
-                #self.SetState(self.robot1, STATE_CHECKFORWARD)
+                self.SetState(self.robot1, STATE.FORGEAHEAD_1)
+                #self.SetState(self.robot1, STATE.CHECKFORWARD)
             else:
                 self.MoveRobotForward(self.robot1)
                 if self.LookLeft(self.robot1): 
                     self.PlaceTile(tuple(self.robot1[0])) # Place the tile in the space where the robot now is
-                self.SetState(self.robot1, STATE_SHIFT_BEGIN)
+                self.SetState(self.robot1, STATE.SHIFT_BEGIN)
         # ********************************************************************************
         #
         # ********************************************************************************                
-        elif self.CheckState(self.robot1, STATE_FOLLOWBB_CW_COMPLETE):
+        elif self.CheckState(self.robot1, STATE.FOLLOWBB_CW_COMPLETE):
             if not self.LookAhead(self.robot1):
                 self.MoveRobotForward(self.robot1)
             elif not self.LookRight(self.robot1):
@@ -415,18 +423,18 @@ class Board:
                 lookAhead = list(map(add, self.robot1[0], MOVES[self.robot1[2]]))
                 if self.CheckCorrnerTile(lookAhead): # We are at a corner, proceed
                     self.PlaceTile(tuple(self.robot1[0])) # Place the tile in the space where the robot now is
-                    self.SetState(self.robot1, STATE_CLOSE_THE_GAP)
+                    self.SetState(self.robot1, STATE.CLOSE_THE_GAP)
                 else: # We are not on a coner, shift to find one
                     self.PlaceTile(tuple(self.robot1[0])) # Place the tile in the space where the robot now is
-                    self.SetState(self.robot1, STATE_SHIFT_AND_CLOSE)
+                    self.SetState(self.robot1, STATE.SHIFT_AND_CLOSE)
         
         # ********************************************************************************
         #
         # ********************************************************************************         
-        elif self.CheckState(self.robot1, STATE_SHIFT_AND_CLOSE):
+        elif self.CheckState(self.robot1, STATE.SHIFT_AND_CLOSE):
             if self.LookBehind(self.robot1):
                 self.TurnRobotLeft(self.robot1)
-                self.SetState(self.robot1, STATE_FOLLOWBB_CW_COMPLETE)
+                self.SetState(self.robot1, STATE.FOLLOWBB_CW_COMPLETE)
                 print("Look for a corner again!")
             else:
                 self.MoveRobotBackward(self.robot1)
@@ -439,67 +447,67 @@ class Board:
         # ********************************************************************************
         #
         # ********************************************************************************                
-        elif self.CheckState(self.robot1, STATE_CLOSE_THE_GAP):
+        elif self.CheckState(self.robot1, STATE.CLOSE_THE_GAP):
             self.MoveRobotForward(self.robot1)
             self.TurnRobotRight(self.robot1)
-            self.SetState(self.robot1, STATE_FIND_ROBOT2_TO_DELETE)
+            self.SetState(self.robot1, STATE.FIND_ROBOT2_TO_DELETE)
         
         # ********************************************************************************
         #
         # ********************************************************************************                
-        elif self.CheckState(self.robot1, STATE_FIND_ROBOT2_TO_DELETE):
+        elif self.CheckState(self.robot1, STATE.FIND_ROBOT2_TO_DELETE):
             self.MoveRobotForward(self.robot1)
             if self.LookForRobot():
                 self.TurnRobotRight(self.robot1)
                 self.TurnRobotRight(self.robot1)
                 self.robot2[2] = self.robot1[2] # Share the orientation
-                self.SetState(self.robot1, STATE_FOLLOW_ME_AND_DELETE)
+                self.SetState(self.robot1, STATE.FOLLOW_ME_AND_DELETE)
         
         # ********************************************************************************
         #
         # ********************************************************************************                
-        elif self.CheckState(self.robot1, STATE_FOLLOW_ME_AND_DELETE):
+        elif self.CheckState(self.robot1, STATE.FOLLOW_ME_AND_DELETE):
             self.MoveRobotForward(self.robot1)
             self.MoveRobotForward(self.robot2)
             self.RemoveTile(loc)
             if self.LookAhead(self.robot1): # I reached the end
-                self.SetState(self.robot1, STATE_FINISH)
+                self.SetState(self.robot1, STATE.FINISH)
             # To Do: Fix this up
         
         # ********************************************************************************
         #
         # ********************************************************************************                
-        elif self.CheckState(self.robot1, STATE_FOLLOWBB_CW):
+        elif self.CheckState(self.robot1, STATE.FOLLOWBB_CW):
             if not self.LookAhead(self.robot1):
                 self.MoveRobotForward(self.robot1)
             elif not self.LookRight(self.robot1):
                 self.TurnRobotRight(self.robot1)
                 self.MoveRobotForward(self.robot1)
             else:
-                self.SetState(self.robot1, STATE_CHECKFORWARD)
+                self.SetState(self.robot1, STATE.CHECKFORWARD)
         
         self.LogResults(message) # Log the results of the operation
         
 
     def LogResults(self,message):
-        if self.robot1[1] in [STATE_IDLE, STATE_SEARCHSOUTH, STATE_SEARCH_EAST_WEST]: # Initial Search States
+        if self.robot1[1] in [STATE.IDLE, STATE.SEARCHSOUTH, STATE.SEARCH_EAST_WEST]: # Initial Search States
             self.results[4][0] +=1
-        if self.robot1[1] in [STATE_BUILDINGBB, STATE_FORGEAHEAD_0, STATE_SHIFT_BEGIN, 
-                      STATE_SHIFT_BLOCK, STATE_SHIFT_CONTINUE, STATE_SHIFT, STATE_CLOSE_THE_GAP,
-                      STATE_SHIFT_AND_CLOSE, STATE_TILE_MEMBERSHIP_SET_MARKER]: # Building/Shifting States
+        if self.robot1[1] in [STATE.BUILDINGBB, STATE.FORGEAHEAD_0, STATE.SHIFT_BEGIN, 
+                      STATE.SHIFT_BLOCK, STATE.SHIFT_CONTINUE, STATE.SHIFT, STATE.CLOSE_THE_GAP,
+                      STATE.SHIFT_AND_CLOSE, STATE.TILE_MEMBERSHIP_SET_MARKER]: # Building/Shifting States
             self.results[4][1] +=1
-        if self.robot1[1] in [STATE_SHIFT_UNDO, STATE_BACKTRACK, STATE_FOLLOW_ME_AND_DELETE]: # Delete States
+        if self.robot1[1] in [STATE.SHIFT_UNDO, STATE.BACKTRACK, STATE.FOLLOW_ME_AND_DELETE]: # Delete States
             self.results[4][2] +=1
-        if self.robot1[1] in [STATE_FOLLOWBB_CW, STATE_FOLLOWBB_CW_LOOK4MARKER, STATE_CHECKFORWARD, 
-                      STATE_FOLLOWBB_CW_COMPLETE, STATE_TILE_MEMBERSHIP_CHEAPCHECK, 
-                      STATE_TILE_MEMBERSHIP_START_SEARCH, STATE_TILE_MEMBERSHIP_SEARCH, 
-                      STATE_FIND_ROBOT2_TO_DELETE, STATE_MOVE_PAST_ROBOT2]: # Move/SearchBB States
+        if self.robot1[1] in [STATE.FOLLOWBB_CW, STATE.FOLLOWBB_CW_LOOK4MARKER, STATE.CHECKFORWARD, 
+                      STATE.FOLLOWBB_CW_COMPLETE, STATE.TILE_MEMBERSHIP_CHEAPCHECK, 
+                      STATE.TILE_MEMBERSHIP_START_SEARCH, STATE.TILE_MEMBERSHIP_SEARCH, 
+                      STATE.FIND_ROBOT2_TO_DELETE, STATE.MOVE_PAST_ROBOT2]: # Move/SearchBB States
             self.results[4][3] +=1
         
         self.log.LogState(self.tiles, self.robot1, self.robot2, " ", list(self.results))
 
 
-#STATE_FINISH = 10 # Do nothing here
+#STATE.FINISH = 10 # Do nothing here
 
 
     def SetPolyomino(self, poly="??"):
@@ -517,70 +525,16 @@ class Board:
         elif poly == "spiral!":
             tile_set = [(7,8), (7,9), (7,10), (6,10), (5,10), (5,9), (5,8), (5,7), (5,6),
                         (5,5), (6,5), (7,5), (8,5), (9,5), (9,6), (9,7), (9,8), (9,9)]
-        elif poly == "L1":
-            tile_set = [(5,4), (4,4), (4,5)]
-            start1 = [4,4]
-            start2 = [4,5]
-        elif poly == "L2":
-            tile_set = [(6,4), (5,4), (4,4), (4,5), (4,6)]
-            start1 = [4,4]
-            start2 = [4,5]
-        elif poly == "L3":
-            tile_set = [(7,4), (6,4), (5,4), (4,4), (4,5), (4,6), (4,7)]
-            start1 = [4,4]
-            start2 = [4,5]
-        elif poly == "L4":
-            tile_set = [(8,4), (7,4), (6,4), (5,4), (4,4), (4,5), (4,6), (4,7), (4,8)]
-            start1 = [4,4]
-            start2 = [4,5]
-        elif poly == "L5":
-            tile_set = [(9,4), (8,4), (7,4), (6,4), (5,4), (4,4), (4,5), (4,6), (4,7),
-                        (4,8), (4,9)]
-            start1 = [4,4]
-            start2 = [4,5]
-        elif poly == "L6":
-            tile_set = [(10,4), (9,4), (8,4), (7,4), (6,4), (5,4), (4,4), (4,5), (4,6), 
-                        (4,7), (4,8), (4,9), (4,10)]
-            start1 = [4,4]
-            start2 = [4,5]
-        elif poly == "L7":
-            tile_set = [(11,4), (10,4), (9,4), (8,4), (7,4), (6,4), (5,4), (4,4), (4,5),
-                        (4,6), (4,7), (4,8), (4,9), (4,10), (4,11)]
-            start1 = [4,4]
-            start2 = [4,5]
-        elif poly == "L8":
-            tile_set = [(12,4), (11,4), (10,4), (9,4), (8,4), (7,4), (6,4), (5,4), (4,4), 
-                        (4,5), (4,6), (4,7), (4,8), (4,9), (4,10), (4,11), (4,12)]
-            start1 = [4,4]
-            start2 = [4,5]
-        elif poly == "L9":
-            tile_set = [(13,4), (12,4), (11,4), (10,4), (9,4), (8,4), (7,4), (6,4), (5,4), 
-                        (4,4), (4,5), (4,6), (4,7), (4,8), (4,9), (4,10), (4,11), (4,12),
-                        (4,13)]
-            start1 = [4,4]
-            start2 = [4,5]
-        elif poly == "L10":
-            tile_set = [(14,4), (13,4), (12,4), (11,4), (10,4), (9,4), (8,4), (7,4), (6,4),
-                        (5,4), (4,4), (4,5), (4,6), (4,7), (4,8), (4,9), (4,10), (4,11), 
-                        (4,12), (4,13), (4,14)]
-            start1 = [4,4]
-            start2 = [4,5]
-        elif poly == "L15":
+        elif poly[0] == "L":
+            size = int(poly[1:])
             tile_set = [(4,4)]
-            for i in range(1,16):
+            for i in range(1,size):
                 tile_set.append((4+i ,4))
                 tile_set.append((4, 4+i))
             start1 = [4,4]
             start2 = [4,5]
-        elif poly == "L31":
-            tile_set = [(4,4)]
-            for i in range(1,32):
-                tile_set.append((4+i ,4))
-                tile_set.append((4, 4+i))
-            start1 = [4,4]
-            start2 = [4,5]
-        elif poly[:2] == "~U":
-            size = int(poly[2:])
+        elif poly[0] == "U":
+            size = int(poly[1:])
             tile_set = [(4,4)]
             for i in range(1,size):
                 tile_set.append((4+i ,4))
@@ -588,8 +542,8 @@ class Board:
                 tile_set.append((4+size-1, 4+i))
             start1 = [4,4]
             start2 = [4,5]
-        elif poly[:2] == "~C":
-            size = int(poly[2:])
+        elif poly[0] == "C":
+            size = int(poly[1:])
             tile_set = [(4,4)]
             for i in range(1,size):
                 tile_set.append((4+i ,4))
@@ -597,8 +551,8 @@ class Board:
                 tile_set.append((4+i, 4+size-1))
             start1 = [4,4]
             start2 = [4,5]
-        elif poly[:2] == "~n":
-            size = int(poly[2:])
+        elif poly[0] == "n":
+            size = int(poly[1:])
             tile_set = []
             for i in range(size):
                 tile_set.append((4+i ,4+size-1))
@@ -614,8 +568,8 @@ class Board:
                     tile_set.append((4+i ,4+j))
             start1 = [4,4]
             start2 = [4,5]
-        elif poly[:2] ==  u"~\uA73E":
-            size = int(poly[2:])
+        elif poly[0] ==  u"\uA73E":
+            size = int(poly[1:])
             tile_set = []
             for i in range(size):
                 tile_set.append((4+i ,4+size-1))
@@ -637,6 +591,8 @@ class Board:
         elif poly == "hookedN":
             tile_set = [(7,9), (7,8), (8,9), (9,9), (10,9), (10,8), (10,7), (10,6), (10,5),
                         (10,4), (9,4), (8,4)]
+        elif poly == "leggyN":
+            tile_set = [(7,9), (7,8), (8,9), (9,9), (10,9), (10,8), (10,7)]
         elif poly == "NASAsq":
             dims = (64,64)
             tile_set = [(3, 20), (4, 20), (5, 20), (6, 20), (7, 20), (8, 20), (9, 20), (10, 20), (11, 20), (12, 20), (13, 20), (14, 20), (15, 20), (16, 20), (17, 20), (18, 20), (19, 20), (20, 20), (21, 20), (22, 20), (23, 20), (24, 20), (25, 20), (26, 20), (27, 20), (28, 20), (29, 20), (30, 20), (31, 20), (32, 20), (33, 20), (34, 20), (35, 20), (36, 20), (37, 20), (38, 20), (39, 20), (40, 20), (41, 20), (42, 20), (43, 20), (44, 20), (45, 20), (46, 20), (47, 20), (3, 19), (47, 19), (3, 18), (6, 18), (7, 18), (8, 18), (9, 18), (13, 18), (14, 18), (20, 18), (21, 18), (28, 18), (29, 18), (30, 18), (31, 18), (32, 18), (33, 18), (40, 18), (41, 18), (47, 18), (3, 17), (5, 17), (6, 17), (7, 17), (8, 17), (9, 17), (10, 17), (13, 17), (14, 17), (19, 17), (20, 17), (21, 17), (22, 17), (27, 17), (28, 17), (29, 17), (30, 17), (31, 17), (32, 17), (33, 17), (34, 17), (39, 17), (40, 17), (41, 17), (42, 17), (47, 17), (3, 16), (5, 16), (6, 16), (9, 16), (10, 16), (13, 16), (14, 16), (18, 16), (19, 16), (20, 16), (21, 16), (22, 16), (23, 16), (27, 16), (28, 16), (38, 16), (39, 16), (40, 16), (41, 16), (42, 16), (43, 16), (47, 16), (3, 15), (5, 15), (6, 15), (9, 15), (10, 15), (13, 15), (14, 15), (18, 15), (19, 15), (22, 15), (23, 15), (27, 15), (28, 15), (38, 15), (39, 15), (42, 15), (43, 15), (47, 15), (3, 14), (5, 14), (6, 14), (9, 14), (10, 14), (13, 14), (14, 14), (18, 14), (19, 14), (22, 14), (23, 14), (27, 14), (28, 14), (38, 14), (39, 14), (42, 14), (43, 14), (47, 14), (3, 13), (5, 13), (6, 13), (9, 13), (10, 13), (13, 13), (14, 13), (17, 13), (18, 13), (19, 13), (22, 13), (23, 13), (24, 13), (27, 13), (28, 13), (29, 13), (30, 13), (31, 13), (32, 13), (33, 13), (37, 13), (38, 13), (39, 13), (42, 13), (43, 13), (44, 13), (47, 13), (3, 12), (5, 12), (6, 12), (9, 12), (10, 12), (13, 12), (14, 12), (17, 12), (18, 12), (23, 12), (24, 12), (28, 12), (29, 12), (30, 12), (31, 12), (32, 12), (33, 12), (34, 12), (37, 12), (38, 12), (43, 12), (44, 12), (47, 12), (3, 11), (5, 11), (6, 11), (9, 11), (10, 11), (13, 11), (14, 11), (17, 11), (18, 11), (19, 11), (20, 11), (21, 11), (22, 11), (23, 11), (24, 11), (33, 11), (34, 11), (37, 11), (38, 11), (39, 11), (40, 11), (41, 11), (42, 11), (43, 11), (44, 11), (47, 11), (3, 10), (5, 10), (6, 10), (9, 10), (10, 10), (13, 10), (14, 10), (16, 10), (17, 10), (18, 10), (19, 10), (20, 10), (21, 10), (22, 10), (23, 10), (24, 10), (25, 10), (33, 10), (34, 10), (36, 10), (37, 10), (38, 10), (39, 10), (40, 10), (41, 10), (42, 10), (43, 10), (44, 10), (45, 10), (47, 10), (3, 9), (5, 9), (6, 9), (9, 9), (10, 9), (13, 9), (14, 9), (16, 9), (17, 9), (24, 9), (25, 9), (33, 9), (34, 9), (36, 9), (37, 9), (44, 9), (45, 9), (47, 9), (3, 8), (5, 8), (6, 8), (9, 8), (10, 8), (11, 8), (12, 8), (13, 8), (14, 8), (16, 8), (17, 8), (24, 8), (25, 8), (27, 8), (28, 8), (29, 8), (30, 8), (31, 8), (32, 8), (33, 8), (34, 8), (36, 8), (37, 8), (44, 8), (45, 8), (47, 8), (3, 7), (5, 7), (6, 7), (10, 7), (11, 7), (12, 7), (13, 7), (16, 7), (17, 7), (24, 7), (25, 7), (28, 7), (29, 7), (30, 7), (31, 7), (32, 7), (33, 7), (36, 7), (37, 7), (44, 7), (45, 7), (47, 7), (3, 6), (47, 6)]
@@ -652,8 +608,8 @@ class Board:
         
         # Establish the board state
         self.log.Reset()
-        self.robot1 = [start1, STATE_SEARCHSOUTH, SOUTH]   # Start at the location in state 1, facing South
-        self.robot2 = [start2, STATE_IDLE, SOUTH] # Start at the location in state 0, facing South
+        self.robot1 = [start1, STATE.SEARCHSOUTH, SOUTH]   # Start at the location in state 1, facing South
+        self.robot2 = [start2, STATE.IDLE, SOUTH] # Start at the location in state 0, facing South
         self.results = [0,0,0,0,[0,0,0,0]]
         self.size = dims        
         self.width, self.height = dims
@@ -672,7 +628,7 @@ class Board:
         for loc in tile_list:
             self.tiles[loc] = 1
         
-        return self.robot1[1] == STATE_FINISH
+        return self.robot1[1] == STATE.FINISH
 
             
     def SetState(self, robot, state):
@@ -688,7 +644,7 @@ class Board:
         """look south for another tile in P"""
         loc_south = self.GetLocation(self.robot1, SOUTH)
         
-        if self.tiles[loc_south] == STATE_SEARCHSOUTH: #is a tile
+        if self.tiles[loc_south] == STATE.SEARCHSOUTH: #is a tile
             #move robot down one, state is still searching down
             self.MoveRobot(self.robot1, SOUTH)
             self.MoveRobot(self.robot2, SOUTH)
@@ -696,7 +652,7 @@ class Board:
             #move robot down one, state is not searching down
             self.MoveRobot(self.robot1, SOUTH)
             self.MoveRobot(self.robot2, SOUTH)
-            self.SetState(self.robot1, STATE_SEARCH_EAST_WEST) # Change the state to looking left and right
+            self.SetState(self.robot1, STATE.SEARCH_EAST_WEST) # Change the state to looking left and right
                 
 
     def SearchEastWest(self):
@@ -709,25 +665,25 @@ class Board:
             #move right, go back to searching down
             self.MoveRobot(self.robot1, EAST)
             self.MoveRobot(self.robot2, EAST)
-            self.SetState(self.robot1, STATE_SEARCHSOUTH) # Set robot1 to search for more tiles south
+            self.SetState(self.robot1, STATE.SEARCHSOUTH) # Set robot1 to search for more tiles south
         elif self.tiles[loc_west] == 1: #is a tile
             #move west, go back to searching down
             self.MoveRobot(self.robot1, WEST)
             self.MoveRobot(self.robot2, WEST)
-            self.SetState(self.robot1, STATE_SEARCHSOUTH) # Set robot1 to search for more tiles south
+            self.SetState(self.robot1, STATE.SEARCHSOUTH) # Set robot1 to search for more tiles south
         elif self.tiles[loc_south] == 1: #is a tile
             self.MoveRobot(self.robot1, SOUTH)
             self.MoveRobot(self.robot2, SOUTH)
-            self.SetState(self.robot1, STATE_SEARCHSOUTH) # Set robot1 to search for more tiles south
+            self.SetState(self.robot1, STATE.SEARCHSOUTH) # Set robot1 to search for more tiles south
         else:
             self.MoveRobot(self.robot1, SOUTH)
             self.MoveRobot(self.robot2, SOUTH)
             if self.LookAhead(self.robot1):
                 self.TurnRobotRight(self.robot1)
-                self.SetState(self.robot1,STATE_FORGEAHEAD_1)
-                self.SetState(self.robot2, STATE_MARK_START) # Get the second robot ready to move down
+                self.SetState(self.robot1,STATE.FORGEAHEAD_1)
+                self.SetState(self.robot2, STATE.MARK_START) # Get the second robot ready to move down
             else:
-                self.SetState(self.robot1,STATE_SEARCHSOUTH)            
+                self.SetState(self.robot1,STATE.SEARCHSOUTH)            
             
             
     def CheckCorrnerTile(self, loc):
@@ -831,12 +787,12 @@ class Board:
         return count
     
     def GetChoices(self):
-        return sorted(["single", "simpeleZ", "L1", "L2", "L3", "L4", "L5", "L6", "L7",
-                        "L8", "L9", "L10", "L15", "L31", "spiral!", "smallHook", 
-                        "backwardsC", "hookedN", "UH", "IEEE", "~U2", "~U4", "~U8", "~U16", "~U32",
-                        "~C2", "~C4", "~C8", "~C16", "~C32", "~n2", "~n4", "~n8", "~n16", "~n32",
-                        "SQ2", "SQ4", "SQ8", "SQ16", "SQ32", u"~\uA73E2", u"~\uA73E4",
-                        u"~\uA73E8", u"~\uA73E16", u"~\uA73E32", "NASA", "TestV"])
+        return sorted(["single", "simpeleZ", "L2", "L3", "L4", "L5", "L6", "L7", "L8",
+                        "L9", "L10", "L16", "L32", "spiral!", "smallHook", "backwardsC",
+                        "hookedN", "leggyN", "UH", "IEEE", "U2", "U4", "U8", "U16", "U32",
+                        "C2", "C4", "C8", "C16", "C32", "n2", "n4", "n8", "n16", "n32",
+                        "SQ2", "SQ4", "SQ8", "SQ16", "SQ32", u"\uA73E2", u"\uA73E4",
+                        u"\uA73E8", u"\uA73E16", u"\uA73E32", "NASA", "TestV"])
                 
     def GetMoveCount(self):
         return self.log.GetStepCount()
