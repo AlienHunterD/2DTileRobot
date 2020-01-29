@@ -152,8 +152,9 @@ class Board:
                 self.Update()
                 if self.CheckState(self.robot1, STATE.FINISH):
                     break
-        except:
+        except Exception as e:
             print("Something bad happened here!")
+            print(e)
             
         self.SetStep(0) # Go back to the beginning
         
@@ -284,7 +285,7 @@ class Board:
                 self.PlaceTile(loc) # Place a tile on the square that I left
                 self.SetState(self.robot1,STATE.FORGEAHEAD_0)
             else:
-                if not self.IsForwardEmpty(self.robot1):
+                if not self.IsForwardEmpty(self.robot1) and self.IsLeftEmpty(self.robot1) and self.IsRightEmpty(self.robot1):
                     self.SetState(self.robot1, STATE.TILE_MEMBERSHIP_CHEAPCHECK) #Start to figure out what we are doing
                     self.MoveRobotForward(self.robot1)
                 else:
@@ -342,18 +343,19 @@ class Board:
         #
         # ********************************************************************************            
         elif self.CheckState(self.robot1, STATE.RETURN_2_BB):
+            
             if not self.IsRightEmpty(self.robot1):
                 self.TurnRobotLeft(self.robot1)
                 self.MoveRobotBackward(self.robot1)
                 self.SetState(self.robot1, STATE.SHIFT_BEGIN)
-            
             else:
                 self.MoveRobotBackward(self.robot1)
                 if self.IsBackwardEmpty(self.robot1):
                     self.TurnRobotLeft(self.robot1)
                     self.SetState(self.robot1, STATE.FORGEAHEAD_1)
                 else:
-                    pass
+                    if not self.IsThisEmpty(self.robot1):
+                        self.SetState(self.robot1, STATE.SHIFT_BEGIN)
                     #self.SetState(self.robot1, STATE.SHIFT_BEGIN)
         # ********************************************************************************
         #
@@ -712,7 +714,7 @@ class Board:
             start1 = [18,21]
             start2 = [18,22]
         else:
-            tile_set = [(6,7), (7,7), (7,6), (8,6)]
+            tile_set = [(7,8), (7,9)]
             dims = (16,16)
         
         # Establish the board state
@@ -720,7 +722,8 @@ class Board:
         self.robot1 = [start1, STATE.SEARCHSOUTH, SOUTH]   # Start at the location in state 1, facing South
         self.robot2 = [start2, STATE.IDLE, SOUTH] # Start at the location in state 0, facing South
         self.results = [0,0,0,0,[0,0,0,0]]
-        self.size = dims        
+        self.size = dims
+        print("The size is:", self.size)
         self.width, self.height = dims
         self.tiles = np.zeros(dims, dtype=int)
         
@@ -728,6 +731,7 @@ class Board:
             self.tiles[point] = 1
         
         self.LogResults("Initial Board State")
+        print("Board Created")
         self.Generate()
 
     def SetStep(self, step):
@@ -870,6 +874,10 @@ class Board:
     def IsForwardEmpty(self, robot):
         """ Returns true if the space ahead is open """
         loc = self.GetLocation(robot, robot[2])
+        return self.tiles[loc] == 0
+    
+    def IsThisEmpty(self, robot):
+        loc = tuple(robot[0])
         return self.tiles[loc] == 0
     
     

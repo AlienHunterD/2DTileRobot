@@ -6,7 +6,6 @@ Dan Biediger
 University of Houston
 """
 import tkinter as tk
-from tkinter import ttk
 import time
 import Board
 
