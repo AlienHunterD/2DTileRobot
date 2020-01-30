@@ -20,7 +20,7 @@ x = 0
 y = img.height -1
 for item in data:
     
-    if item == 0:
+    if item[0] == 0:
         result.append((x+OFFSET,y+OFFSET))
     
     x +=1
