@@ -15,7 +15,7 @@ class AutomatonUIApp:
         self.board = Board.Board()
         self.frameMain = tk.Frame(master, width=1920, height=1080, bd=1)
         self.frameMain.pack(side=tk.LEFT)
-        self.canvasResult = tk.Canvas(self.frameMain, width=450, height=900)
+        self.canvasResult = tk.Canvas(self.frameMain, width=300, height=900)
         self.canvasResult.pack(side=tk.LEFT, fill=tk.BOTH)
         self.canvasBoard = tk.Canvas(self.frameMain, width=900, height=900)
         self.canvasBoard.pack(side=tk.LEFT, fill=tk.BOTH)

@@ -142,8 +142,10 @@ class Board:
         
         
         # ToDo: Fix up the states into something more like a dictionary
-        canvas.create_text((offset, 180), anchor='nw', font=("Purisa", 14), text="Robot 1: {}".format(str(self.robot1[1])[6:]))
-        canvas.create_text((offset, 210), anchor='nw', font=("Purisa", 14), text="Robot 2: {}".format(str(self.robot2[1])[6:]))
+        canvas.create_text((offset, 180), anchor='nw', font=("Purisa", 14), text="Robot 1:")
+        canvas.create_text((offset, 210), anchor='nw', font=("Purisa", 12), text="  {}".format(str(self.robot1[1])[6:]))
+        canvas.create_text((offset, 240), anchor='nw', font=("Purisa", 14), text="Robot 2:")
+        canvas.create_text((offset, 270), anchor='nw', font=("Purisa", 12), text="  {}".format(str(self.robot2[1])[6:]))
 
         
     def Generate(self):
