@@ -72,7 +72,11 @@ class AutomatonUIApp:
         self.slider.configure(to=self.board.GetMoveCount()-1) #Note the need to offset by 1 for one-off errors
         self.slider.update()
         self.DrawBoard()
-        print(self.board.results[4], sum(self.board.results[4]))
+        
+        for name,value in zip(["Initial Search", "Add/Shift Tile", "Delete Tile", "Move/Search"], self.board.results[4]):
+            print("{} - {}".format(name, value))
+        
+        print("Total Moves: {}".format(sum(self.board.results[4])))
         
     
     def Iterate(self):

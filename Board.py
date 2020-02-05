@@ -245,13 +245,17 @@ class Board:
         #
         # ********************************************************************************
         elif self.CheckState(self.robot1, STATE.SHIFT_UNDO):
-            if self.IsLeftEmpty(self.robot1):
-                self.SetState(self.robot1, STATE.BACKTRACK)
-            else:
+            if not self.IsLeftEmpty(self.robot1):
                 locLeft = self.GetLocation(self.robot1, COUNTERCLOCKWISE[self.robot1[2]])
                 self.RemoveTile(locLeft)
+            else:
                 self.MoveRobotForward(self.robot1)
-                self.PlaceTile(tuple(self.robot1[0])) # Place the tile in the space adjacent to the roobot then move onto it
+                if self.IsLeftEmpty(self.robot1):
+                    self.SetState(self.robot1, STATE.BACKTRACK)
+                else:
+                    self.PlaceTile(tuple(self.robot1[0])) # Place the tile in the space adjacent to the roobot then move onto it
+                    locLeft = self.GetLocation(self.robot1, COUNTERCLOCKWISE[self.robot1[2]])
+                    self.RemoveTile(locLeft)
         # ********************************************************************************
         #
         # ********************************************************************************
@@ -525,7 +529,7 @@ class Board:
             else:
                 self.MoveRobotForward(self.robot1)
                 # To Do: Chec here to see if a shif is needed to the left
-                print("Stepped into the gap")
+                #print("Stepped into the gap")
                 IsForwardEmpty = list(map(add, self.robot1[0], MOVES[self.robot1[2]]))
                 if self.CheckCorrnerTile(IsForwardEmpty): # We are at a corner, proceed
                     self.PlaceTile(tuple(self.robot1[0])) # Place the tile in the space where the robot now is
@@ -541,7 +545,7 @@ class Board:
             if self.IsBackwardEmpty(self.robot1):
                 self.TurnRobotLeft(self.robot1)
                 self.SetState(self.robot1, STATE.FOLLOWBB_CW_COMPLETE)
-                print("Look for a corner again!")
+                #print("Look for a corner again!")
             else:
                 self.MoveRobotBackward(self.robot1)
                 self.RemoveTile(loc)
@@ -549,7 +553,7 @@ class Board:
                 IsForwardEmpty = tuple(map(add, self.robot1[0], MOVES[self.robot1[2]]))
                 self.PlaceTile(IsForwardEmpty) # Place
                 self.TurnRobotRight(self.robot1)
-                print("Keep Shifting")
+                #print("Keep Shifting")
         # ********************************************************************************
         #
         # ********************************************************************************                
@@ -599,16 +603,16 @@ class Board:
     def LogResults(self,message):
         if self.robot1[1] in [STATE.IDLE, STATE.SEARCHSOUTH, STATE.SEARCH_EAST_WEST]: # Initial Search States
             self.results[4][0] +=1
-        if self.robot1[1] in [STATE.BUILDINGBB, STATE.FORGEAHEAD_0, STATE.SHIFT_BEGIN, 
-                      STATE.SHIFT_PICK_BLOCK, STATE.SHIFT_CONTINUE, STATE.SHIFT, STATE.CLOSE_THE_GAP,
-                      STATE.SHIFT_AND_CLOSE, STATE.TILE_MEMBERSHIP_MARKER_DECISION]: # Building/Shifting States
+        if self.robot1[1] in [STATE.BUILDINGBB, STATE.FORGEAHEAD_0, STATE.FORGEAHEAD_1,STATE.FORGEAHEAD_2, STATE.SHIFT_BEGIN, 
+                      STATE.SHIFT_PICK_BLOCK, STATE.SHIFT_CONTINUE, STATE.SHIFT, STATE.CLOSE_THE_GAP, STATE.SHIFT_AHEAD, STATE.PEPARE_2_SHIFT_LEFT,
+                      STATE.SHIFT_AND_CLOSE, STATE.TILE_MEMBERSHIP_MARKER_DECISION, STATE.SHIFT_VALIDATE_PLACEMENT]: # Building/Shifting States
             self.results[4][1] +=1
         if self.robot1[1] in [STATE.SHIFT_UNDO, STATE.BACKTRACK, STATE.FOLLOW_ME_AND_DELETE]: # Delete States
             self.results[4][2] +=1
         if self.robot1[1] in [STATE.FOLLOWBB_CW, STATE.FOLLOWBB_CW_LOOK4MARKER, STATE.CHECKFORWARD, 
                       STATE.FOLLOWBB_CW_COMPLETE, STATE.TILE_MEMBERSHIP_CHEAPCHECK, 
                       STATE.TILE_MEMBERSHIP_START_SEARCH, STATE.TILE_MEMBERSHIP_SEARCH, 
-                      STATE.FIND_ROBOT2_TO_DELETE, STATE.MOVE_PAST_ROBOT2]: # Move/SearchBB States
+                      STATE.FIND_ROBOT2_TO_DELETE, STATE.MOVE_PAST_ROBOT2, STATE.BRIDGE, STATE.RETURN_2_BB, STATE.TILE_MEMBERSHIP_VALIDATE_MARKER]: # Move/SearchBB States
             self.results[4][3] +=1
         
         self.log.LogState(self.tiles, self.robot1, self.robot2, " ", list(self.results))
@@ -621,7 +625,7 @@ class Board:
         result = 2**math.ceil(math.log2(minimum))
         return (result, result)
 
-    def SetPolyomino(self, poly="??"):
+    def SetPolyomino(self, poly="simpleZ"):
         self.tiles.fill(0)
         start1 = [7,8]
         start2 = [7,9]
@@ -632,7 +636,7 @@ class Board:
         if poly == "single":
             start1 = [4,4]
             start2 = [4,5]
-            self.tiles[4,4] = 1
+            tile_set = [(4,4)]
             dims = (8,8)
         elif poly == "spiral!":
             tile_set = [(7,8), (7,9), (7,10), (6,10), (5,10), (5,9), (5,8), (5,7), (5,6),
@@ -747,7 +751,7 @@ class Board:
             start1 = [6,6]
             start2 = [6,7]
         else:
-            tile_set = [(7,8), (7,9)]
+            tile_set = [(6,9), (7,8), (7,9), (8,8)]
             dims = (16,16)
         
         # Establish the board state
@@ -756,7 +760,7 @@ class Board:
         self.robot2 = [start2, STATE.IDLE, SOUTH] # Start at the location in state 0, facing South
         self.results = [0,0,0,0,[0,0,0,0]]
         self.size = dims
-        print("The size is:", self.size)
+        #print("The size is:", self.size)
         self.width, self.height = dims
         self.tiles = np.zeros(dims, dtype=int)
         
@@ -764,7 +768,7 @@ class Board:
             self.tiles[point] = 1
         
         self.LogResults("Initial Board State")
-        print("Board Created")
+        print("Board Created: {} - size:{}".format(poly,self.size))
         self.Generate()
 
     def SetStep(self, step):
