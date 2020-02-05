@@ -223,10 +223,13 @@ class Board:
                 self.TurnRobotLeft(self.robot1)
                 self.SetState(self.robot1, STATE.FOLLOWBB_CW)
             else:
-                self.MoveRobotBackward(self.robot1)
-                self.RemoveTile(loc)
-                self.TurnRobotLeft(self.robot1)
-                self.SetState(self.robot1, STATE.SHIFT_VALIDATE_PLACEMENT)
+                if self.IsRobot2BehindRobot1(): # Oops, I ran into the other robot
+                    self.SetState(self.robot1, STATE.SHIFT_UNDO) 
+                else:
+                    self.MoveRobotBackward(self.robot1)
+                    self.RemoveTile(loc)
+                    self.TurnRobotLeft(self.robot1)
+                    self.SetState(self.robot1, STATE.SHIFT_VALIDATE_PLACEMENT)
         # ********************************************************************************
         #
         # ********************************************************************************
@@ -242,13 +245,13 @@ class Board:
         #
         # ********************************************************************************
         elif self.CheckState(self.robot1, STATE.SHIFT_UNDO):
-            self.MoveRobotForward(self.robot1)
             if self.IsLeftEmpty(self.robot1):
                 self.SetState(self.robot1, STATE.BACKTRACK)
             else:
-                self.PlaceTile(tuple(self.robot1[0])) # Place the tile in the space adjacent to the roobot then move onto it
                 locLeft = self.GetLocation(self.robot1, COUNTERCLOCKWISE[self.robot1[2]])
                 self.RemoveTile(locLeft)
+                self.MoveRobotForward(self.robot1)
+                self.PlaceTile(tuple(self.robot1[0])) # Place the tile in the space adjacent to the roobot then move onto it
         # ********************************************************************************
         #
         # ********************************************************************************
