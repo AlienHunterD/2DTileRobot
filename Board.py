@@ -690,7 +690,7 @@ class Board:
             start1 = [4,4]
             start2 = [4,5]
             dims = self.ComputeDims(size)
-        elif poly[0] ==  u"\uA73E":
+        elif poly[0] ==  u"\u2290":
             size = int(poly[1:])
             tile_set = []
             for i in range(size):
@@ -959,8 +959,8 @@ class Board:
                         "L09", "L10", "L16", "L32", "spiral!", "smallHook", "backwardsC",
                         "hookedN", "leggyN", "MY_UH", "IEEE", "U02", "U04", "U08", "U16", "U32",
                         "C02", "C04", "C08", "C16", "C32", "n02", "n04", "n08", "n16", "n32",
-                        "SQ02", "SQ04", "SQ08", "SQ16", "SQ32", u"\uA73E02", u"\uA73E04",
-                        u"\uA73E08", u"\uA73E16", u"\uA73E32", "NASA", "TestV", "Spiral", "Temple", "Shrine"])
+                        "SQ02", "SQ04", "SQ08", "SQ16", "SQ32", u"\u229002", u"\u229004",
+                        u"\u229008", u"\u229016", u"\u229032", "NASA", "TestV", "Spiral", "Temple", "Shrine"])
                 
     def GetMoveCount(self):
         return self.log.GetStepCount()
