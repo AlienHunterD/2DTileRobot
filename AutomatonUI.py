@@ -80,10 +80,10 @@ class AutomatonUIApp:
         
     
     def Iterate(self):
-        for step in range(800):
+        for step in range(self.board.GetMoveCount()):
             temp = self.board.SetStep(step)
             self.DrawBoard()
-            time.sleep(0.1)
+            time.sleep(1/15)
             if temp:
                 return
             
