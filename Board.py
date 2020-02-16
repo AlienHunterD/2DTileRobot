@@ -72,6 +72,7 @@ class Board:
         self.log = MoveLog.MoveLog()
         self.SetPolyomino()
         self.SetStep(0) # Go back to the beginning
+        self.showAxes = True # Show the numbers on the Axes
     
     def _DrawGrid(self, canvas, size, offset):
         deltaX = int(size[0]/self.width) #Change here for non square cells
@@ -84,12 +85,14 @@ class Board:
             canvas.create_line(offset, y, self.width*deltaX+offset, y, 
                                fill='#c0c0c0')#Horizontal lines
         
-        for x in range(self.width): # Draw the column numbers
-            loc = (x*deltaX+3*deltaX/4, self.height*deltaY+offset+5)
-            canvas.create_text(loc, anchor='nw', text="{}".format(x))
-        for y in range(self.height): # Draw the row numbers
-            loc = (10,(self.height-y-1)*deltaY+3*deltaY/4)
-            canvas.create_text(loc, anchor='nw', text="{}".format(y))
+        
+        if self.showAxes:
+            for x in range(self.width): # Draw the column numbers
+                loc = (x*deltaX+3*deltaX/4, self.height*deltaY+offset+5)
+                canvas.create_text(loc, anchor='nw', text="{}".format(x))
+            for y in range(self.height): # Draw the row numbers
+                loc = (10,(self.height-y-1)*deltaY+3*deltaY/4)
+                canvas.create_text(loc, anchor='nw', text="{}".format(y))
 
     def DrawDirection(self, canvas, x,y,dx,dy,direction):
         points = [x + dx/2, y + 2, x + 2, y + dy/2 + 1, x + dx - 2, y + dy/2 + 1]
@@ -130,8 +133,9 @@ class Board:
         canvas.create_oval((x+2, y+2, x+deltaX-2, y+deltaY-2),fill="blue")
         self.DrawDirection(canvas, x, y, deltaX, deltaY, self.robot2[2])
         #canvas.create_text((x+deltaX/2, y+deltaY/2), anchor='center', font=("Purisa", 14), text=str(self.robot2[1].value))
-
-        canvas.create_text((20,18), anchor='sw', text="{}x{}".format(self.width,self.height))
+        
+        if self.showAxes:
+            canvas.create_text((20,18), anchor='sw', text="{}x{}".format(self.width,self.height))
     
     def ShowResults(self, canvas, size = (400,400), offset = 20):
         steps,moves,placed,picked,data = self.results

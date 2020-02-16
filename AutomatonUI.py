@@ -6,6 +6,7 @@ Dan Biediger
 University of Houston
 """
 import tkinter as tk
+from tkinter import ttk
 import time
 import Board
 
@@ -15,31 +16,42 @@ class AutomatonUIApp:
         self.board = Board.Board()
         self.frameMain = tk.Frame(master, width=1920, height=1080, bd=1)
         self.frameMain.pack(side=tk.LEFT)
-        self.canvasResult = tk.Canvas(self.frameMain, width=300, height=900)
+        self.canvasResult = tk.Canvas(self.frameMain, width=300, height=950)
         self.canvasResult.pack(side=tk.LEFT, fill=tk.BOTH)
-        self.canvasBoard = tk.Canvas(self.frameMain, width=900, height=900)
+        self.canvasBoard = tk.Canvas(self.frameMain, width=900, height=950)
         self.canvasBoard.pack(side=tk.LEFT, fill=tk.BOTH)
-        self.frame = tk.Frame(master, bd=2, relief=tk.RAISED)
-        self.frame.pack(side=tk.RIGHT, fill=tk.BOTH)
+        self.controlFrame = tk.Frame(master, bd=2, relief=tk.RAISED)
+        self.controlFrame.pack(side=tk.RIGHT, fill=tk.BOTH)
+        self.tabControl = ttk.Notebook(self.controlFrame)
         
-        self.labelTop = tk.Label(self.frame, text = "1. Select a Polyomino configuration")
+        self.tab1 = ttk.Frame(self.tabControl)
+        self.tabControl.add(self.tab1, text='Control')
+        self.tab2 = ttk.Frame(self.tabControl)
+        self.tabControl.add(self.tab2, text='Settings')
+        self.tabControl.pack(expand=1, fill="both")
+        
+        self.labelTop = tk.Label(self.tab1, text = "Select a Polyomino configuration")
         self.labelTop.pack(side=tk.TOP)
                 
         self.tkvar = tk.StringVar(master)
         self.choices = self.board.GetChoices()
         self.tkvar.set(self.choices[0])
-        self.popupMenu = tk.OptionMenu(self.frame, self.tkvar, *self.choices)
+        self.popupMenu = tk.OptionMenu(self.tab1, self.tkvar, *self.choices)
         self.tkvar.trace('w', self.SetPolyomino)
         self.popupMenu.pack(side=tk.TOP)
         
-        self.iterateButton = tk.Button(self.frame, text='Iterate', command=self.Iterate)        
+        self.iterateButton = tk.Button(self.tab1, text='Iterate', command=self.Iterate)        
         self.iterateButton.pack(side=tk.BOTTOM)
-        #self.iterateButton = tk.Button(self.frame, text='Results!', command=self.GenerateResults)        
+        #self.iterateButton = tk.Button(self.controlFrame, text='Results!', command=self.GenerateResults)        
         #self.iterateButton.pack(side=tk.BOTTOM)
 
-        self.slider = tk.Scale(self.frame, from_=0, to=Board.MAX_MOVES, orient=tk.VERTICAL, 
+        self.slider = tk.Scale(self.tab1, from_=0, to=Board.MAX_MOVES, orient=tk.VERTICAL, 
                                resolution=1, length=800, sliderlength=20, command=self.SetCurrentStep)
         self.slider.pack(side=tk.BOTTOM)
+        
+        # Settings Tab
+        self.axisButton = tk.Button(self.tab2, text='Hide Axes', command=self.ToggleShowAxes)        
+        self.axisButton.pack(side=tk.TOP)
         
         self.SetPolyomino()
         
@@ -81,12 +93,24 @@ class AutomatonUIApp:
     
     def Iterate(self):
         for step in range(self.board.GetMoveCount()):
-            temp = self.board.SetStep(step)
-            self.DrawBoard()
+            self.slider.set(step)
+            self.canvasBoard.update()
+            self.canvasResult.update()
             time.sleep(1/15)
-            if temp:
-                return
             
+    
+    def ToggleShowAxes(self):
+        if self.axisButton.config('text')[-1] == 'Show Axes':
+            # Turn the Axis on
+            self.axisButton.config(text='Hide Axes')
+            self.board.showAxes = True
+        else:
+            # Turn the Axis off
+            self.axisButton.config(text='Show Axes')
+            self.board.showAxes = False
+
+        self.DrawBoard() # Redraw the board
+    
             
     def GenerateResults(self):
         choices = ["single", "L02", "L04", "L08", "L16", "L32", "U02", "U04", "U08",
@@ -107,6 +131,7 @@ class AutomatonUIApp:
     
     
 root = tk.Tk()
+root.title("2D Tile Simulation")
 
 app = AutomatonUIApp(root)
 
