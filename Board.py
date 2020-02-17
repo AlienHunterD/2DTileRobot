@@ -759,8 +759,10 @@ class Board:
             start1 = [6,6]
             start2 = [6,7]
         else:
-            tile_set = [(6,9), (7,8), (7,9), (8,8)]
-            dims = (16,16)
+            tile_set = [(5,8), (6,7), (6,8), (7,7)]
+            start1 = [6,7]
+            start2 = [6,8]
+            dims = (12,12)
         
         # Establish the board state
         self.log.Reset()
