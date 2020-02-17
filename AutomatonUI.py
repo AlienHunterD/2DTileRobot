@@ -88,7 +88,7 @@ class AutomatonUIApp:
         for name,value in zip(["Initial Search", "Add/Shift Tile", "Delete Tile", "Move/Search"], self.board.results[4]):
             print("{} - {}".format(name, value))
         
-        print("Total Moves: {}".format(sum(self.board.results[4])))
+        #print("Total Moves: {}".format(sum(self.board.results[4])))
         
     
     def Iterate(self):
