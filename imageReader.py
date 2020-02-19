@@ -10,7 +10,7 @@ import numpy as np
 
 OFFSET = 5
 
-img = Image.open('test.png')
+img = Image.open('tubs.png')
 
 data = np.array(img.getdata())
 
